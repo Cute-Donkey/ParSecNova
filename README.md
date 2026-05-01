@@ -30,4 +30,4 @@ This project aims to bridge the gap between classic Newtonian flight physics and
 ### Installation
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/](https://github.com/)[Your-Org]/[Your-Repo].git
+   git clone https://github.com/Cute-Donkey/ParSecNova.git
