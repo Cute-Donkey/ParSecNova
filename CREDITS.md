@@ -27,7 +27,7 @@ The visual and auditory identity of ParSec was built by a dedicated community. A
 - **New Contributions:** All new logic and AI-assisted world definitions are contributed under the project's primary GPL-3.0 license.
 
 ## 🛠️ Modern Development
-- **Lead Developer:** [Cute-Donkey]
+- **Lead Developer:** [@Cute-Donkey](https://github.com/Cute-Donkey)
 - **Engine:** [Godot Engine 4.x](https://godotengine.org)
 - **AI Integration:** World-generation specs and modern C# refactoring assisted by AI-guided development workflows.
 
