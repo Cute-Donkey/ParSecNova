@@ -1,0 +1,10 @@
+{
+    "name": "ParSec Nova",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "remoteUser": "vscode",
+    "features": {
+        "ghcr.io/devcontainers/features/github-cli:1": {}
+    }
+}
