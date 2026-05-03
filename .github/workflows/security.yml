@@ -40,8 +40,9 @@ jobs:
       uses: trufflesecurity/trufflehog@main
       with:
         path: ./
-        base: main
+        base: "HEAD~1"
         head: HEAD
+        fail: true
         
     - name: Check File Permissions
       run: |
