@@ -15,3 +15,12 @@ export_credentials.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# German documentation (keep private)
+plans/*_de.md
+plans/*_german.md
+docs/*_de.md
+docs/*_german.md
+docs/*_german.md
+docs/*_german.md
+docs/*_german.md
