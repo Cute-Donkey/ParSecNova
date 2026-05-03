@@ -1,4 +1,4 @@
-# ParSec Nova xxxxx
+# ParSec Nova
 
 A modern, open-source rebirth of the legendary linux space combat simulator **ParSec** (1999/2002). 
 
