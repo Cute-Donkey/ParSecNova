@@ -8,6 +8,16 @@ export.cfg
 export_credentials.cfg
 *.tmp
 
+# Build artifacts (generated executables and data)
+build/
+*.pck
+*.x86_64
+*.exe
+
+# Godot UID and metadata files (auto-generated)
+*.uid
+*.import
+
 # Imported translations (automatically generated from CSV files)
 *.translation
 
