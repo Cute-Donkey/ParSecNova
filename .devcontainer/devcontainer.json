@@ -7,17 +7,9 @@
     "features": {
         "ghcr.io/devcontainers/features/github-cli:1": {},
         "ghcr.io/devcontainers/features/dotnet:1": {},
-        "ghcr.io/devcontainers/features/go:1": {}
-    },
-    "customizations": {
-        "vscode": {
-            "extensions": [
-                "ms-dotnettools.csharp",
-                "godotengine.godot-tools",
-                "ms-vscode.hexeditor",
-                "redhat.vscode-yaml",
-                "ms-vscode.cpptools"
-            ]
+        "ghcr.io/devcontainers/features/go:1": {
+            "version": "1.22",
+            "golangciLintVersion": "1.54.2"
         }
     }
 }
