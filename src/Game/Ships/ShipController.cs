@@ -92,7 +92,7 @@ namespace ParSecNova.Game.Ships
             
             if (torque != Vector3.Zero)
             {
-                ApplyCustomTorque(torque.Normalized(), 1.0f);
+                ApplyTorque(torque.Normalized(), 1.0f);
             }
             else
             {
