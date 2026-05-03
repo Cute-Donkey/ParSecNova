@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://test_scene_001"]
+
+[sub_resource type="BoxMesh" id="box_mesh"]
+size = Vector3(2, 2, 2)
+
+[sub_resource type="StandardMaterial3D" id="box_material"]
+albedo_color = Color(1, 0, 0, 1)
+
+[node name="TestScene" type="Node3D"]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 5)
+
+[node name="TestCube" type="MeshInstance3D" parent="."]
+mesh = SubResource("box_mesh")
+material_override = SubResource("box_material")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707107, -0.5, 0.5, 0, 0.707107, 0.707107, -0.707107, -0.5, 0.5, 0, 0, 0)
+light_energy = 2.0
+shadow_enabled = false

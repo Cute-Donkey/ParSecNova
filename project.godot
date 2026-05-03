@@ -9,7 +9,7 @@ config/description="A space exploration and combat game with Newtonian physics"
 config/version="0.2.0"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon=""
-run/main_scene="res://scenes/prototypes/HeadlessPrototype.tscn"
+run/main_scene="res://scenes/prototypes/TestScene.tscn"
 
 [display]
 
