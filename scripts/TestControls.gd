@@ -46,6 +46,12 @@ func _process(delta):
 		player.position += forward * thrust_speed * delta
 		player_moved = true
 	
+	# Reverse thrust (shift+spacebar moves player backward)
+	if Input.is_action_pressed("ui_cancel"):  # Shift+Spacebar
+		var forward = -player.global_transform.basis.z
+		player.position -= forward * thrust_speed * delta
+		player_moved = true
+	
 	if player_moved:
 		update_camera_position()
 
