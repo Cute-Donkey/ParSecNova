@@ -3,9 +3,9 @@ extends SceneTree
 func _init():
     print("⚛️ Physics performance test starting...")
     
-    # Create a scene root
+    # Create a scene root and set it as current scene
     var root = Node3D.new()
-    add_child(root)
+    current_scene = root
     
     # Create multiple objects to test physics performance
     var objects = []
