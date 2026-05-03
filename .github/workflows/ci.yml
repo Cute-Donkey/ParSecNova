@@ -215,6 +215,17 @@ jobs:
         unzip -q Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64.zip
         chmod +x Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64
         
+    - name: Download Export Templates
+      run: |
+        # Create export templates directory
+        mkdir -p ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+        
+        # Download export templates
+        wget -q https://github.com/godotengine/godot/releases/download/4.6.2-stable/Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
+        unzip -q Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
+        
+        echo "✅ Export templates installed"
+        
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
