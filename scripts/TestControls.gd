@@ -2,34 +2,46 @@ extends Node3D
 
 var camera: Camera3D
 var cube: MeshInstance3D
-var rotation_speed: float = 0.5
+var rotation_speed: float = 1.0
+var zoom_speed: float = 5.0
+var camera_distance: float = 8.0
+var camera_angle: float = 0.0
+var camera_height: float = 3.0
 
 func _ready():
 	camera = $Camera3D
 	cube = $TestCube
+	# Initialize camera position
+	update_camera_position()
 	print("TestControls initialized!")
 
 func _process(delta):
-	# Camera rotation around cube
-	var rotation_amount = 0.0
-	if Input.is_action_pressed("ui_left"):
-		rotation_amount -= rotation_speed
-	if Input.is_action_pressed("ui_right"):
-		rotation_amount += rotation_speed
+	var camera_moved = false
 	
-	if rotation_amount != 0.0:
-		# Rotate camera around the cube
-		var current_angle = atan2(camera.position.z, camera.position.x)
-		var new_angle = current_angle + rotation_amount * delta
-		var distance = Vector2(camera.position.x, camera.position.z).length()
-		
-		camera.position.x = cos(new_angle) * distance
-		camera.position.z = sin(new_angle) * distance
-		camera.look_at(cube.global_position)
+	# Camera rotation around cube (orbit camera)
+	if Input.is_action_pressed("ui_left"):
+		camera_angle -= rotation_speed * delta
+		camera_moved = true
+	if Input.is_action_pressed("ui_right"):
+		camera_angle += rotation_speed * delta
+		camera_moved = true
 	
 	# Zoom in/out
 	if Input.is_action_pressed("ui_up"):
-		camera.position = camera.position.move_toward(cube.global_position, delta * 5)
+		camera_distance = max(3.0, camera_distance - zoom_speed * delta)
+		camera_moved = true
 	if Input.is_action_pressed("ui_down"):
-		camera.position = camera.position.move_toward(cube.global_position, -delta * 5)
-		camera.look_at(cube.global_position)
+		camera_distance = min(20.0, camera_distance + zoom_speed * delta)
+		camera_moved = true
+	
+	if camera_moved:
+		update_camera_position()
+
+func update_camera_position():
+	# Calculate camera position in orbit around cube
+	camera.position.x = cos(camera_angle) * camera_distance
+	camera.position.z = sin(camera_angle) * camera_distance
+	camera.position.y = camera_height
+	
+	# Always look at the cube
+	camera.look_at(cube.global_position)
