@@ -31,10 +31,10 @@
 - [x] Style guide for consistent asset quality
 
 ### 1.4 Project Structure
-- [ ] Create Godot project
-- [ ] Configure C# project setup
-- [ ] Folder structure for code, assets, scenes
-- [ ] Set up build pipeline
+- [x] Create Godot project
+- [x] Configure C# project setup
+- [x] Folder structure for code, assets, scenes
+- [x] Set up build pipeline
 
 ---
 
