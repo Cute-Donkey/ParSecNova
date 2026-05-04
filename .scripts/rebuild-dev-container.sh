@@ -3,16 +3,44 @@
 echo "🔄 Dev Container Rebuild Script"
 echo "================================"
 
-# Container stoppen und entfernen
-echo "🛑 Stopping existing container..."
-docker stop codium-devcontainer-parsecnova 2>/dev/null && echo "✅ Container stopped" || echo "⚠️  No running container found"
+# Container mit "-parsecnova-" im Namen oder Image finden und entfernen
+echo "🛑 Finding and stopping containers with '-parsecnova-'..."
+CONTAINERS=$(docker ps -a --format "{{.Names}}:{{.Image}}" | grep parsecnova | cut -d: -f1)
 
-echo "🗑️  Removing existing container..."
-docker rm codium-devcontainer-parsecnova 2>/dev/null && echo "✅ Container removed" || echo "⚠️  No container to remove"
+if [ -n "$CONTAINERS" ]; then
+    echo "📋 Found containers:"
+    echo "$CONTAINERS"
+    echo ""
+    
+    for container in $CONTAINERS; do
+        echo "🛑 Stopping container: $container"
+        docker stop "$container" 2>/dev/null && echo "✅ Stopped: $container" || echo "⚠️  Could not stop: $container"
+        
+        echo "🗑️  Removing container: $container"
+        docker rm "$container" 2>/dev/null && echo "✅ Removed: $container" || echo "⚠️  Could not remove: $container"
+        echo ""
+    done
+else
+    echo "⚠️  No containers with '-parsecnova-' found"
+fi
 
-# Image entfernen, damit es neu gebaut wird
-echo "🗑️  Removing existing image to force rebuild..."
-docker rmi codium-devcontainer-parsecnova:latest 2>/dev/null && echo "✅ Image removed" || echo "⚠️  No image to remove"
+# Images mit "-parsecnova-" im Namen finden und entfernen
+echo "🗑️  Finding and removing images with '-parsecnova-'..."
+IMAGES=$(docker images --format "{{.Repository}}:{{.Tag}}" | grep parsecnova)
+
+if [ -n "$IMAGES" ]; then
+    echo "📋 Found images:"
+    echo "$IMAGES"
+    echo ""
+    
+    for image in $IMAGES; do
+        echo "🗑️  Removing image: $image"
+        docker rmi "$image" 2>/dev/null && echo "✅ Removed: $image" || echo "⚠️  Could not remove: $image"
+        echo ""
+    done
+else
+    echo "⚠️  No images with '-parsecnova-' found"
+fi
 
 echo ""
 echo "✅ Dev Container environment cleaned!"
