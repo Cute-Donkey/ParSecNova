@@ -26,21 +26,4 @@ build/
 data_*/
 mono_crash.*.json
 
-# German documentation (keep private)
-plans/*_de.md
-plans/*_german.md
-docs/*_de.md
-docs/*_german.md
-docs/*_german.md
-docs/*_german.md
-docs/*_german.md
-docs/*_german.md
-docs/*_german.md
-docs/*_german.md
-docs/*_german.md
-docs/*_german.md
-docs/*_german.md
-docs/*_german.md
-docs/*_german.md
-docs/*_german.md
-docs/*_german.md
+# German documentation (moved to .git/info/exclude for Cascade access)
