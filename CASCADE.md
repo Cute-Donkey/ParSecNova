@@ -28,12 +28,59 @@
 
 ## Development Rules
 
-### Git Workflow
-- **NO autonomous Git changes** - User explicitly stated: "keine selbstständigen änderungen am git will. keine commits keine pushes. nichts."
-- **NO automatic pushes** - User controls when to push manually
-- Only commit when explicitly requested
-- Default behavior: commit only, no push
-- User preference: "lassen Sie das jetzt so, aber in zukunft keine pushes mehr. Ich will nicht alles pushen was ich committe."
+### Git Workflow - ABSOLUTE RESTRICTIONS
+
+🚫 **FORBIDDEN GIT OPERATIONS - NEVER EXECUTE:**
+- git commit (ABSOLUTELY FORBIDDEN)
+- git push (ABSOLUTELY FORBIDDEN) 
+- git add . (ABSOLUTELY FORBIDDEN)
+- git reset --hard (ABSOLUTELY FORBIDDEN)
+- git merge (ABSOLUTELY FORBIDDEN)
+- git rebase (ABSOLUTELY FORBIDDEN)
+
+✅ **ALLOWED GIT OPERATIONS (READ-ONLY):**
+- git status (SHOW RESULTS TO USER)
+- git diff (SHOW RESULTS TO USER)
+- git log (SHOW RESULTS TO USER)
+- git show (SHOW RESULTS TO USER)
+
+🔓 **EXPLICIT COMMANDS - ONE-TIME EXECUTION ONLY:**
+- "commit [file/description]" → ALLOWED: ONLY this specific change
+- "commit the plan" → ALLOWED: ONLY plan files, NOTHING else
+- "push only this" → ALLOWED: ONLY the last committed changes
+
+🚫 **STRICT PROJECTION PROHIBITIONS:**
+- NEVER assume permission extends to other files
+- NEVER assume permission extends to subsequent operations  
+- NEVER batch multiple commits without explicit request
+- NEVER push after commit unless explicitly requested
+
+✅ **MANDATORY VALIDATION PROTOCOL:**
+1. "You want: [exact action] - Confirm?"
+2. "Only [specific file/change] - Correct?"
+3. "No further actions after - Understood?"
+
+🔒 **RESET AFTER EACH ACTION:**
+- After each commit: Permission reset
+- After each push: Permission reset  
+- New action = new permission required
+
+🔒 **MANDATORY WORKFLOW BEFORE ANY CHANGES:**
+1. ALWAYS run: git status
+2. ALWAYS SHOW RESULTS to user
+3. ALWAYS ask: "Git status shows [changes]. Proceed with modifications?"
+4. NEVER proceed without explicit "YES" or "PROCEED"
+
+🔒 **MANDATORY WORKFLOW AFTER ANY CHANGES:**
+1. ALWAYS run: git status
+2. ALWAYS SHOW RESULTS to user  
+3. ALWAYS ask: "Changes made. Should I create a commit?"
+4. NEVER commit without explicit "COMMIT" command
+
+⚠️ **EMERGENCY PROTOCOL:**
+- If git operations fail: STOP immediately
+- If uncertain about changes: ASK user
+- If user says "STOP": HALT all operations
 
 ### Language Requirements
 - **Dual language documentation** required:
@@ -141,5 +188,9 @@ This file serves as persistent context for CASCADE AI agent across chat sessions
 - Important technical decisions are made
 - Translation requirements evolve
 
+## CRITICAL REMINDER
+THESE GIT RULES ARE ABSOLUTE. VIOLATION CONSTITUTES SYSTEM FAILURE.
+
 ## Last Updated
 2026-05-04 - Added comprehensive Plan Language Management System with dual language requirements, preference detection, and .git/info/exclude management
+2026-05-04 - Added absolute Git restrictions with granular permission system and explicit command validation
