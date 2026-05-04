@@ -231,7 +231,7 @@ assets/
 ### Technical Requirements for Remake
 
 **Physics Engine:**
-- Custom RigidBody3D with Newtonian laws
+- Custom RigidBody3D with Newton's laws
 - Thrust and maneuvering systems
 - Collision detection for space objects
 
