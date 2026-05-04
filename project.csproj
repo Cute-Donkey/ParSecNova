@@ -4,6 +4,10 @@
     <RootNamespace>ParSecNova</RootNamespace>
     <AssemblyName>ParSecNova</AssemblyName>
     <GodotSourceGeneratorProperties>GodotSourceGeneratorProperties</GodotSourceGeneratorProperties>
+    <PublishSingleFile>false</PublishSingleFile>
+    <SelfContained>false</SelfContained>
+    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
+    <PublishTrimmed>false</PublishTrimmed>
   </PropertyGroup>
   
   <ItemGroup>

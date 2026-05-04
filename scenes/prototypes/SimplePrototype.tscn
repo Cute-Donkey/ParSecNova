@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://simple_prototype_001"]
 
 [ext_resource type="Environment" path="res://assets/environments/default_env.tres" id="1_env"]
-[ext_resource type="Script" path="res://scripts/TestControls.gd" id="test_controls"]
+[ext_resource type="Script" path="res://src/Core/TestControls.cs" id="test_controls"]
 
 [sub_resource type="SphereMesh" id="AsteroidMesh_1"]
 radius = 15.0
