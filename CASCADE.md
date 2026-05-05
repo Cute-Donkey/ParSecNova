@@ -80,7 +80,8 @@
 ⚠️ **EMERGENCY PROTOCOL:**
 - If git operations fail: STOP immediately
 - If uncertain about changes: ASK user
-- If user says "STOP": HALT all operations
+- If user says "STOP" or "stop": HALT ALL operations immediately
+- **ABSOLUTE STOP COMMAND:** The word "stop" (any case) immediately terminates all AI activities without confirmation
 
 ### Language Requirements
 - **Dual language documentation** required:

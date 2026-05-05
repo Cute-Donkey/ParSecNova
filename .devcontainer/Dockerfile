@@ -22,11 +22,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfontconfig1 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Download and install Godot 4.6.2 with Mono support (for C#)
+# Download and install Godot 4.3 with Mono support (for C#)
 RUN wget -O /tmp/godot-linux.x86_64.zip \
-    https://godot-releases.nbg1.your-objectstorage.com/4.6.2-stable/Godot_v4.6.2-stable_mono_linux_x86_64.zip \
+    https://github.com/godotengine/godot-builds/releases/download/4.3-stable/Godot_v4.3-stable_mono_linux_x86_64.zip \
     && unzip /tmp/godot-linux.x86_64.zip -d /opt/godot \
-    && mv /opt/godot/Godot_v4.6.2-stable_mono_linux_x86_64 /opt/godot/Godot \
+    && mv /opt/godot/Godot_v4.3-stable_mono_linux_x86_64 /opt/godot/Godot \
     && chmod +x /opt/godot/Godot \
     && ln -s /opt/godot/Godot /usr/local/bin/godot \
     && rm /tmp/godot-linux.x86_64.zip

@@ -7,7 +7,7 @@
 config/name="ParSec Nova"
 config/description="A space exploration and combat game with Newtonian physics"
 config/version="0.2.0"
-config/features=PackedStringArray("4.6", "Forward Plus", "C#")
+config/features=PackedStringArray("4.3", "Forward Plus", "C#")
 config/icon=""
 run/main_scene="res://scenes/prototypes/SimplePrototype.tscn"
 
