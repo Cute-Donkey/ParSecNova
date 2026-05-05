@@ -69,13 +69,24 @@
 1. ALWAYS run: git status
 2. ALWAYS SHOW RESULTS to user
 3. ALWAYS ask: "Git status shows [changes]. Proceed with modifications?"
-4. NEVER proceed without explicit "YES" or "PROCEED"
+4. **WAIT FOR USER RESPONSE** - NEVER proceed without explicit "YES" or "PROCEED"
+5. **CONFIRMATION LOOP**: If no response after asking, REPEAT the question until user answers
 
 🔒 **MANDATORY WORKFLOW AFTER ANY CHANGES:**
 1. ALWAYS run: git status
 2. ALWAYS SHOW RESULTS to user  
 3. ALWAYS ask: "Changes made. Should I create a commit?"
-4. NEVER commit without explicit "COMMIT" command
+4. **WAIT FOR USER RESPONSE** - NEVER commit without explicit "COMMIT" command
+5. **CONFIRMATION LOOP**: If no response after asking, REPEAT the question until user answers
+
+🔒 **ABSOLUTE CONFIRMATION RULES:**
+- **NO ASSUMPTIONS**: Never assume user intent from context
+- **EXPLICIT INPUT REQUIRED**: Every action needs explicit user confirmation
+- **ZERO ACTION WITHOUT APPROVAL**: NO action of any kind without explicit user approval
+- **REPEAT IF UNCLEAR**: If user response is ambiguous, ask for clarification
+- **ONE ACTION AT A TIME**: Never batch multiple actions without separate confirmation for each
+- **IMMEDIATE HALT**: If user says "NO", "STOP", or shows disapproval, STOP ALL ACTIVITIES instantly
+- **NO AUTO-PROCEED**: Never proceed with any action without waiting for explicit user response
 
 ⚠️ **EMERGENCY PROTOCOL:**
 - If git operations fail: STOP immediately
