@@ -38,6 +38,13 @@
 - git merge (ABSOLUTELY FORBIDDEN)
 - git rebase (ABSOLUTELY FORBIDDEN)
 
+🚫 **CARGO.TOML - ABSOLUTE PROHIBITION:**
+- **NEVER** modify `Cargo.toml` under any circumstances
+- **EXCEPTION**: Only CI/CD profile maintenance is allowed
+- **EXCEPTION SCOPE**: Changes only permitted within `[profile.ci-cd]` section
+- **ALL OTHER SECTIONS**: Absolutely forbidden, no exceptions
+- **VIOLATION**: Any modification outside CI/CD profile constitutes system failure
+
 ✅ **ALLOWED GIT OPERATIONS (READ-ONLY):**
 - git status (SHOW RESULTS TO USER)
 - git diff (SHOW RESULTS TO USER)
@@ -204,5 +211,6 @@ This file serves as persistent context for CASCADE AI agent across chat sessions
 THESE GIT RULES ARE ABSOLUTE. VIOLATION CONSTITUTES SYSTEM FAILURE.
 
 ## Last Updated
+2026-05-06 - Added absolute Cargo.toml prohibition rule with CI/CD profile exception only
 2026-05-04 - Added comprehensive Plan Language Management System with dual language requirements, preference detection, and .git/info/exclude management
 2026-05-04 - Added absolute Git restrictions with granular permission system and explicit command validation
