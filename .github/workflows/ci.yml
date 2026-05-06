@@ -124,8 +124,8 @@ jobs:
       with:
         name: rust-build
         path: |
-          target/release/parsec-nova*
-          !target/release/*.d
+          target/ci-cd/parsec-nova*
+          !target/ci-cd/*.d
         retention-days: 7
 
   # Phase 3: Rust Headless Tests
@@ -204,7 +204,7 @@ jobs:
           echo "❌ Binary not found - build may have failed"
           echo "Current directory contents:"
           ls -la target/ || echo "target directory not found"
-          ls -la target/release/ || echo "release directory not found"
+          ls -la target/ci-cd/ || echo "ci-cd directory not found"
           exit 1
         fi
         
