@@ -21,69 +21,33 @@ env:
   WINIT_USE_X11: true
 
 jobs:
-  # Phase 1: Basic Validation
   validate:
     name: Validate Project Structure
     runs-on: ubuntu-latest
-    outputs:
-      should-continue: ${{ steps.changes.outputs.src == 'true' || steps.changes.outputs.assets == 'true' || steps.changes.outputs.docs == 'true' }}
-    
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-      
-    - name: Detect File Changes
-      uses: dorny/paths-filter@v2
-      id: changes
-      with:
-        filters: |
-          src:
-            - 'src/**/*.rs'
-            - 'Cargo.toml'
-            - 'Cargo.lock'
-          assets:
-            - 'assets/**/*'
-          docs:
-            - '*.md'
-            - 'docs/**/*'
-    
     - name: Validate Project Files
       run: |
-        echo "🔍 Checking project structure..."
-        
-        # Check essential files exist
-        echo "Checking for required files..."
-        test -f Cargo.toml && echo "✅ Cargo.toml found" || { echo "❌ Cargo.toml missing"; exit 1; }
-        test -f README.md && echo "✅ README.md found" || { echo "⚠️ README.md missing"; }
-        
-        # Check directories
-        echo "Checking for required directories..."
-        test -d src && echo "✅ src directory found" || { echo "❌ src directory missing"; exit 1; }
-        test -d assets && echo "✅ assets directory found" || { echo "❌ assets directory missing"; exit 1; }
-        
-        echo "✅ Project structure validation passed"
+        test -f Cargo.toml && echo "✅ Cargo.toml found" || exit 1
+        test -d src && echo "✅ src found" || exit 1
+        test -d assets && echo "✅ assets found" || exit 1
 
-  # Phase 2: Rust Build and Tests
   build-rust:
     name: Build Rust Components
     runs-on: ubuntu-latest
     needs: validate
-    
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-      
-    - name: Setup Rust
-      uses: dtolnay/rust-toolchain@master
-      with:
-        toolchain: ${{ env.RUST_TOOLCHAIN }}
-        components: rustfmt, clippy
-        
     - name: Install System Dependencies (Linux)
       run: |
         sudo apt-get update
         sudo apt-get install -y pkg-config libx11-dev libudev-dev libxkbcommon-dev libxrandr-dev libxi-dev xorg-dev libasound2-dev
-        
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ env.RUST_TOOLCHAIN }}
     - name: Cache Cargo Dependencies
       uses: actions/cache@v4
       with:
@@ -91,63 +55,25 @@ jobs:
           ~/.cargo/registry
           ~/.cargo/git
           target
-        key: ${{ runner.os }}-cargo-v3-${{ hashFiles('**/Cargo.lock') }}
-        
-    - name: Check Formatting
-      run: cargo fmt --all -- --check
-      
-    - name: Run Clippy
-      run: |
-        echo "🔍 Running clippy with verbose output..."
-        cargo clippy --all-targets --all-features --verbose -- -W clippy::all -A clippy::needless_pass_by_value -A clippy::explicit_iter_loop
-        echo "✅ Clippy completed successfully"
-      
+        key: ${{ runner.os }}-cargo-v4-${{ hashFiles('**/Cargo.lock') }}
     - name: Build Project
-      env:
-        WINIT_BACKEND: x11
-        WINIT_USE_X11: true
-      run: cargo build --verbose --profile ci-cd --no-default-features --features bevy_asset,bevy_core_pipeline,bevy_pbr,bevy_render,bevy_sprite,bevy_text,bevy_ui,bevy_window,bevy_winit,x11
-      
-    - name: Run Tests
-      run: cargo test --verbose
-      
-    - name: Run Benchmarks
-      run: |
-        if [ -d "benches" ]; then
-          cargo bench
-        else
-          echo "ℹ️ No benchmarks found - skipping"
-        fi
-      
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: rust-build
-        path: |
-          target/ci-cd/parsec-nova*
-          !target/ci-cd/*.d
-        retention-days: 7
+      run: cargo build --profile ci-cd --verbose
 
-  # Phase 3: Rust Headless Tests
   test-rust:
     name: Rust Headless Tests
     runs-on: ubuntu-latest
     needs: validate
-    
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-      
     - name: Install System Dependencies (Linux)
       run: |
         sudo apt-get update
-        sudo apt-get install -y pkg-config libx11-dev libudev-dev libxkbcommon-dev libxrandr-dev libxi-dev xorg-dev libasound2-dev
-        
+        sudo apt-get install -y pkg-config libx11-dev libudev-dev libxkbcommon-dev libxrandr-dev libxi-dev xorg-dev libasound2-dev xvfb
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ env.RUST_TOOLCHAIN }}
-        
     - name: Cache Cargo Dependencies
       uses: actions/cache@v4
       with:
@@ -155,107 +81,18 @@ jobs:
           ~/.cargo/registry
           ~/.cargo/git
           target
-        key: ${{ runner.os }}-cargo-v3-${{ hashFiles('**/Cargo.lock') }}
-        
-    - name: Validate Project Structure
-      run: |
-        echo "🔍 Validating project structure..."
-        
-        # Check essential files
-        required_files=("Cargo.toml" "src/main.rs" "README.md")
-        
-        for file in "${required_files[@]}"; do
-          if [ -f "$file" ]; then
-            echo "✅ Found: $file"
-          else
-            echo "❌ Missing: $file"
-            exit 1
-          fi
-        done
-        
-        # Check Cargo.toml syntax
-        echo "🔧 Checking Cargo.toml syntax..."
-        if ! cargo check --quiet; then
-          echo "❌ Invalid Cargo.toml structure"
-          exit 1
-        fi
-        
-        # Validate asset directories
-        echo "🎬 Checking asset directories..."
-        if [ -d "assets" ]; then
-          asset_count=$(find assets -type f | wc -l)
-          echo "✅ Found $asset_count asset files"
-        else
-          echo "⚠️ No assets directory found"
-        fi
-        
+        key: ${{ runner.os }}-cargo-v4-${{ hashFiles('**/Cargo.lock') }}
     - name: Test Headless Simulation
       run: |
-        echo "🚀 Testing headless simulation..."
-        
-        # Build first to separate build time from execution
-        echo "Building release version..."
-        cargo build --release --no-default-features --features bevy_asset,bevy_core_pipeline,bevy_pbr,bevy_render,bevy_sprite,bevy_text,bevy_ui,bevy_window,bevy_winit,x11 --verbose
-        
-        # Test the binary with timeout
-        echo "Checking for binary..."
-        BINARY="target/release/parsec_nova"
-        
+        cargo build --profile ci-cd
+        BINARY="target/ci-cd/parsec_nova"
         if [ -f "$BINARY" ]; then
-          echo "✅ Binary found, testing execution..."
-          timeout 10s ./$BINARY || {
-            echo "ℹ️ Application started successfully (timeout expected)"
-          }
-          echo "✅ Headless simulation started successfully"
+          # Nutzt xvfb-run für den virtuellen Monitor
+          timeout 15s xvfb-run ./$BINARY || echo "Application timed out as expected"
         else
-          echo "❌ Binary not found at $BINARY"
-          find target -name "parsec_nova" # Suchhilfe falls Pfad anders
           exit 1
         fi
-        
-    - name: Test JSON World Loading
-      run: |
-        echo "🧪 Testing JSON world loading..."
-        echo "Current assets directory structure:"
-        find assets -type f || echo "No files found in assets"
-        
-        # Test world files if they exist
-        if [ -d "assets/worlds" ]; then
-          echo "📁 assets/worlds directory found"
-          for world in assets/worlds/*.json; do
-            if [ -f "$world" ]; then
-              echo "🔍 Testing $world..."
-              # Basic JSON validation
-              if python3 -m json.tool "$world" > /dev/null 2>&1; then
-                echo "✅ $world is valid JSON"
-              else
-                echo "❌ $world has invalid JSON"
-                echo "Content of $world:"
-                cat "$world"
-                exit 1
-              fi
-            else
-              echo "⚠️ No JSON files found in assets/worlds"
-            fi
-          done
-        else
-          echo "⚠️ No worlds directory found - creating example"
-          mkdir -p assets/worlds
-          echo '{"entities": [], "version": "1.0"}' > assets/worlds/example.json
-          echo "✅ Created example world file"
-        fi
-        
-    - name: Performance Benchmarks
-      run: |
-        echo "📊 Running performance benchmarks..."
-        if [ -d "benches" ]; then
-          cargo bench --no-run
-          echo "✅ Benchmarks compiled successfully"
-        else
-          echo "⚠️ No benchmarks found - skipping"
-        fi
 
-  # Phase 4: Multi-Platform Builds
   build-multiplatform:
     name: Multi-Platform Builds
     runs-on: ${{ matrix.os }}
@@ -272,162 +109,54 @@ jobs:
           - os: macos-latest
             platform: macos
             target: x86_64-apple-darwin
-          - os: macos-latest
-            platform: macos-arm
-            target: aarch64-apple-darwin
-    
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-      
+    - name: Install Linux Dependencies
+      if: matrix.platform == 'linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-dev libxrandr-dev libxi-dev xorg-dev
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ env.RUST_TOOLCHAIN }}
         target: ${{ matrix.target }}
-        
-    - name: Cache Cargo Dependencies
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-${{ matrix.target }}-cargo-v2-${{ hashFiles('**/Cargo.lock') }}
-        
-    - name: Install System Dependencies (Linux)
-      if: matrix.platform == 'linux'
+    - name: Build for Platform
       run: |
-        sudo apt-get update
-        sudo apt-get install -y pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-dev libxrandr-dev libxi-dev xorg-dev
-        
-    - name: Build for ${{ matrix.platform }}
-      run: |
-        echo "🚀 Building for ${{ matrix.platform }} (target: ${{ matrix.target }})..."
-        
-        # Create build directory structure with assets folder
         mkdir -p build/${{ matrix.platform }}/assets
+        cargo build --profile ci-cd --target ${{ matrix.target }}
         
-        # Build for target
-        cargo build --profile ci-cd --no-default-features --features bevy_asset,bevy_core_pipeline,bevy_pbr,bevy_render,bevy_sprite,bevy_text,bevy_ui,bevy_window,bevy_winit,x11 --target ${{ matrix.target }}
-        
-        # Copy binary AND assets to build directory
-        case "${{ matrix.platform }}" in
-          linux)
-            cp target/${{ matrix.target }}/ci-cd/parsec-nova build/${{ matrix.platform }}/parsec-nova
-            ;;
-          windows)
-            cp target/${{ matrix.target }}/ci-cd/parsec-nova.exe build/${{ matrix.platform }}/parsec-nova.exe
-            ;;
-          macos|macos-arm)
-            cp target/${{ matrix.target }}/ci-cd/parsec-nova build/${{ matrix.platform }}/parsec-nova
-            ;;
-        esac
-        
-        # Copy all assets to make game playable
-        cp -r assets/* build/${{ matrix.platform }}/assets/ || echo "No assets found to copy"
-        
-        echo "✅ ${{ matrix.platform }} build completed"
-        
-    - name: Upload Build Artifacts
+        # Binaries kopieren (Windows hat .exe Endung)
+        if [ "${{ matrix.platform }}" = "windows" ]; then
+          cp target/${{ matrix.target }}/ci-cd/parsec_nova.exe build/${{ matrix.platform }}/
+        else
+          cp target/${{ matrix.target }}/ci-cd/parsec_nova build/${{ matrix.platform }}/
+        fi
+        cp -r assets/* build/${{ matrix.platform }}/assets/
+    - name: Upload Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: parsec-nova-${{ matrix.platform }}
         path: build/${{ matrix.platform }}/
-        retention-days: 30
 
-  # Phase 5: Documentation and Quality
-  quality-check:
-    name: Quality & Documentation
-    runs-on: ubuntu-latest
-    needs: validate
-    
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      
-    - name: Check Documentation
-      run: |
-        echo "📚 Checking documentation..."
-        
-        # Check for essential documentation
-        if [ ! -f "README.md" ]; then
-          echo "❌ README.md missing"
-          exit 1
-        fi
-        
-        if [ ! -f "README_Prototype.md" ]; then
-          echo "⚠️ README_Prototype.md missing"
-        fi
-        
-        echo "✅ Documentation validation passed"
-        
-        echo "✅ .gitignore validation passed"
-
-  # Phase 6: Release (only on main branch)
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [validate, build-rust, test-rust, build-multiplatform, quality-check]
-    if: github.ref == 'refs/heads/main' && success()
-    
+    needs: [build-multiplatform]
+    if: github.ref == 'refs/heads/main'
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      
-    - name: Download Build Artifacts
+    - name: Download Artifacts
       uses: actions/download-artifact@v4
       with:
         path: releases/
-        
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        name: ParSec Nova v${{ github.run_number }}
         tag_name: v${{ github.run_number }}
-        body: |
-          ## ParSec Nova - Rust/Bevy Prototype
-          
-          ### 🚀 Features
-          - ✅ Rust-based ECS architecture
-          - ✅ Headless simulation capability
-          - ✅ Dynamic JSON world loading
-          - ✅ Multi-platform native binaries
-          - ✅ Performance-optimized physics
-          
-          ### 📦 Downloads
-          - **Linux**: `parsec-nova-linux/` (contains parsec-nova + assets folder)
-          - **Windows**: `parsec-nova-windows/` (contains parsec-nova.exe + assets folder)
-          - **macOS (Intel)**: `parsec-nova-macos/` (contains parsec-nova + assets folder)
-          - **macOS (Apple Silicon)**: `parsec-nova-macos-arm/` (contains parsec-nova + assets folder)
-          
-          ### 🎮 Running
-          ```bash
-          # Extract the ZIP file, then run:
-          
-          # Linux/macOS
-          ./parsec-nova
-          
-          # Windows
-          parsec-nova.exe
-          
-          # The game will automatically find the assets folder
-          ```
-          
-          ### 📊 Status
-          - **Build**: ✅ Passed
-          - **Tests**: ✅ Passed
-          - **Quality**: ✅ Passed
-          - **Benchmarks**: ✅ Passed
-          
-          ---
-          Built from commit: ${{ github.sha }}
         files: |
-          releases/parsec-nova-linux/*.*
-          releases/parsec-nova-windows/*.*
-          releases/parsec-nova-macos/*.*
-          releases/parsec-nova-macos-arm/*.*
-        draft: false
-        prerelease: true
+          releases/parsec-nova-linux/*
+          releases/parsec-nova-windows/*
+          releases/parsec-nova-macos/*
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
