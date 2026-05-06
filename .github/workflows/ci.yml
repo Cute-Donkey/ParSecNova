@@ -305,13 +305,13 @@ jobs:
       run: |
         echo "🚀 Building for ${{ matrix.platform }} (target: ${{ matrix.target }})..."
         
-        # Create build directory
-        mkdir -p build/${{ matrix.platform }}
+        # Create build directory structure with assets folder
+        mkdir -p build/${{ matrix.platform }}/assets
         
         # Build for target
         cargo build --profile ci-cd --no-default-features --features bevy_asset,bevy_core_pipeline,bevy_pbr,bevy_render,bevy_sprite,bevy_text,bevy_ui,bevy_window,bevy_winit,x11 --target ${{ matrix.target }}
         
-        # Copy binaries to build directory
+        # Copy binary AND assets to build directory
         case "${{ matrix.platform }}" in
           linux)
             cp target/${{ matrix.target }}/ci-cd/parsec-nova build/${{ matrix.platform }}/parsec-nova
@@ -323,6 +323,9 @@ jobs:
             cp target/${{ matrix.target }}/ci-cd/parsec-nova build/${{ matrix.platform }}/parsec-nova
             ;;
         esac
+        
+        # Copy all assets to make game playable
+        cp -r assets/* build/${{ matrix.platform }}/assets/ || echo "No assets found to copy"
         
         echo "✅ ${{ matrix.platform }} build completed"
         
@@ -393,21 +396,22 @@ jobs:
           - ✅ Performance-optimized physics
           
           ### 📦 Downloads
-          - **Linux**: `parsec-nova-linux/parsec-nova`
-          - **Windows**: `parsec-nova-windows/parsec-nova.exe`
-          - **macOS (Intel)**: `parsec-nova-macos/parsec-nova`
-          - **macOS (Apple Silicon)**: `parsec-nova-macos-arm/parsec-nova`
+          - **Linux**: `parsec-nova-linux/` (contains parsec-nova + assets folder)
+          - **Windows**: `parsec-nova-windows/` (contains parsec-nova.exe + assets folder)
+          - **macOS (Intel)**: `parsec-nova-macos/` (contains parsec-nova + assets folder)
+          - **macOS (Apple Silicon)**: `parsec-nova-macos-arm/` (contains parsec-nova + assets folder)
           
           ### 🎮 Running
           ```bash
-          # Headless simulation
-          ./parsec-nova --mode simulation
+          # Extract the ZIP file, then run:
           
-          # Full client with visualization
-          ./parsec-nova --mode client
-          
-          # Both simulation and client
+          # Linux/macOS
           ./parsec-nova
+          
+          # Windows
+          parsec-nova.exe
+          
+          # The game will automatically find the assets folder
           ```
           
           ### 📊 Status
