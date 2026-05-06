@@ -2,7 +2,7 @@
 
 A modern, open-source rebirth of the legendary linux space combat simulator **ParSec** (1999/2002). 
 
-This project aims to bridge the gap between classic Newtonian flight physics and modern game engine technology. By leveraging **Godot 4** and **C#**, we are rebuilding the experience from the ground up, focusing on decentralized multiplayer and AI-driven world-building.
+This project aims to bridge the gap between classic Newtonian flight physics and modern game engine technology. By leveraging **Rust** and **Bevy**, we are rebuilding the experience from the ground up, focusing on decentralized multiplayer and AI-driven world-building.
 
 ## ✨ Core Vision
 
@@ -13,11 +13,13 @@ This project aims to bridge the gap between classic Newtonian flight physics and
 
 ## 🛠 Tech Stack
 
-- **Engine:** [Godot 4.x](https://godotengine.org/)
-- **Language:** C# (.NET 8/9)
-- **Physics:** Custom RigidBody3D implementation based on original ParSec logic.
-- **Multiplayer:** Godot High-level Multiplayer API (ENet/P2P).
-- **Data Format:** JSON-based world and ship definitions.
+- **Language:** [Rust](https://www.rust-lang.org/)
+- **Engine:** [Bevy](https://bevyengine.org/) (ECS-based game engine)
+- **Physics:** Custom Newtonian physics systems using Bevy's ECS architecture.
+- **Architecture:** Strict separation of simulation (headless) and visualization.
+- **Data Format:** JSON-based world definitions with dynamic runtime loading.
+- **Build System:** Cargo with static compilation for portable binaries.
+- **Development:** Docker/DevContainer for isolated build environment.
 
 ## 📂 Repository Structure
 This project is part of the [donkey-projects](https://github.com/donkey-projects) organization. To facilitate development, the following repositories are used:
@@ -31,8 +33,9 @@ This project is part of the [donkey-projects](https://github.com/donkey-projects
 **⚠️ Important Notice:** This project is currently in **early development**. We have completed the analysis and planning phase (Phase 1) and set up the basic project structure (Phase 1.4). The actual game implementation (Phase 2+) has not yet begun. Please see the [Project Plan](plans/) for detailed development progress.
 
 ### Prerequisites
-- .NET SDK (8.0 or higher)
-- Godot Engine 4.x (.NET Version)
+- Rust toolchain (stable)
+- Docker and DevContainer support (recommended)
+- For visualization: Native graphics drivers (Vulkan/Metal/DX12)
 
 ### Installation
 1. Clone the repository:
@@ -41,64 +44,89 @@ This project is part of the [donkey-projects](https://github.com/donkey-projects
    cd ParSecNova
 ```
 
-2. Open the project in Godot:
+2. Open in DevContainer (recommended):
 ```bash
-   godot --editor
+   # Open in VS Code with DevContainer extension
+   code .
+   # Reopen in Container when prompted
+```
+
+3. Or build locally:
+```bash
+   cargo build --release
 ```
 
 ### Current Development Status
 - ✅ **Phase 1.1**: Original ParSec Analysis (completed)
 - ✅ **Phase 1.2**: Technical Requirements (completed)
 - ✅ **Phase 1.3**: Asset Analysis & AI Modernization (completed)
-- ✅ **Phase 1.4**: Project Structure Setup (completed)
+- 🟠 **Phase 1.4**: Project Structure & Tech Stack Migration (in progress)
 - ⏳ **Phase 2**: Early Prototype (upcoming)
 
 ### Project Structure
 ```
 ParSecNova/
-├── src/                    # C# source code
-│   ├── Core/              # Core systems (ECS, Physics, Network)
-│   ├── Game/              # Game logic (Ships, Weapons, Environment)
-│   └── Systems/           # Manager classes (Game, Asset, Input)
+├── src/                    # Rust source code
+│   ├── core/              # Core ECS systems (Physics, Components)
+│   ├── simulation/        # Headless simulation logic
+│   ├── visualization/     # Client-side rendering systems
+│   └── systems/           # Bevy systems and queries
 ├── assets/                # Game assets
 │   ├── models/            # 3D models (glTF/GLB)
 │   ├── textures/          # Textures (PNG/WebP)
 │   ├── sounds/            # Audio files (WAV/OGG)
-│   └── worlds/            # JSON world data
-├── scenes/                # Godot scenes
-│   ├── core/              # Core scenes (Main, GameManager)
-│   ├── game/              # Game scenes (SpaceSector, Ship)
-│   └── ui/                # UI scenes (MainMenu, HUD)
-├── tools/                 # Development tools
-├── tests/                 # Unit tests
-└── build/                 # Build output
+│   └── worlds/            # JSON world definitions
+├── benches/               # Performance benchmarks
+├── tests/                 # Integration and unit tests
+└── target/                # Cargo build output
 ```
 
 ### Building
 ```bash
-# Make build script executable
-chmod +x build.sh
+# Development build
+cargo build
 
-# Build for all platforms
-./build.sh
+# Release build with optimizations
+cargo build --release
+
+# Run tests
+cargo test
+
+# Run benchmarks
+cargo bench
 ```
 
 ### Running
 ```bash
-# Run with Godot
-godot --headless --skip-menu
+# Headless simulation (server mode)
+cargo run --bin simulation
 
-# Or open in editor
-godot --editor
+# Full client with visualization
+cargo run --bin client
+
+# Both simulation and client
+cargo run
 ```
 
-### Known Issues
+### Architecture Highlights
 
-#### Web Canvas Scaling
-The web version currently exhibits a canvas scaling issue where the game renders at a very low internal resolution (64x64), resulting in pixelation. This is a documented limitation of Godot's web export system when using CLI/headless builds.
+#### ECS-Based Design
+ParSecNova uses Bevy's Entity Component System for massive parallel processing:
+- **Entities**: Game objects (ships, asteroids, projectiles)
+- **Components**: Data (position, velocity, mass, visual assets)
+- **Systems**: Logic that processes components (physics, rendering, AI)
 
-**Details:** See [docs/web-canvas-scaling-issue.md](docs/web-canvas-scaling-issue.md) for complete analysis and attempted solutions.
+#### Headless Simulation
+The core simulation runs completely headless, enabling:
+- Server-side world generation with AI
+- Massive-scale physics calculations
+- P2P world sharing without visual dependencies
 
-**Current Status:** The web version is functional but pixelated. Desktop builds are unaffected.
+#### Dynamic World Loading
+Worlds are defined entirely in JSON format:
+- Entities and their physical properties
+- Asset references (models, textures, sounds)
+- Complete world state can be shared between players
+- No code changes required for new content
 
 For detailed licensing and a list of original contributors, see **[CREDITS.md](CREDITS.md)**.

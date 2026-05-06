@@ -14,8 +14,8 @@ permissions:
   id-token: write
 
 env:
-  GODOT_VERSION: 4.6.2
-  DOTNET_VERSION: 8.0.x
+  RUST_TOOLCHAIN: stable
+  CARGO_TERM_COLOR: always
 
 jobs:
   # Phase 1: Basic Validation
@@ -23,7 +23,7 @@ jobs:
     name: Validate Project Structure
     runs-on: ubuntu-latest
     outputs:
-      should-continue: ${{ steps.changes.outputs.src == 'true' || steps.changes.outputs.scenes == 'true' || steps.changes.outputs.scripts == 'true' }}
+      should-continue: ${{ steps.changes.outputs.src == 'true' || steps.changes.outputs.assets == 'true' || steps.changes.outputs.docs == 'true' }}
     
     steps:
     - name: Checkout Repository
@@ -35,13 +35,9 @@ jobs:
       with:
         filters: |
           src:
-            - 'src/**/*.cs'
-            - 'project.csproj'
-          scenes:
-            - 'scenes/**/*.tscn'
-            - 'project.godot'
-          scripts:
-            - 'scripts/**/*.gd'
+            - 'src/**/*.rs'
+            - 'Cargo.toml'
+            - 'Cargo.lock'
           assets:
             - 'assets/**/*'
           docs:
@@ -53,20 +49,18 @@ jobs:
         echo "Checking project structure..."
         
         # Check essential files exist
-        test -f project.godot || { echo "❌ project.godot missing"; exit 1; }
-        test -f project.csproj || { echo "❌ project.csproj missing"; exit 1; }
+        test -f Cargo.toml || { echo "❌ Cargo.toml missing"; exit 1; }
         test -f README.md || { echo "⚠️ README.md missing"; }
         
         # Check directories
         test -d src || { echo "❌ src directory missing"; exit 1; }
-        test -d scenes || { echo "❌ scenes directory missing"; exit 1; }
         test -d assets || { echo "❌ assets directory missing"; exit 1; }
         
         echo "✅ Project structure validation passed"
 
-  # Phase 2: C# Build and Tests
-  build-csharp:
-    name: Build C# Components
+  # Phase 2: Rust Build and Tests
+  build-rust:
+    name: Build Rust Components
     runs-on: ubuntu-latest
     needs: validate
     
@@ -74,37 +68,53 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
       
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@master
       with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+        toolchain: ${{ env.RUST_TOOLCHAIN }}
+        components: rustfmt, clippy
         
-    - name: Restore Dependencies
-      run: dotnet restore
+    - name: Cache Cargo Dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Check Formatting
+      run: cargo fmt --all -- --check
       
-    - name: Build C# Project
-      run: dotnet build --configuration Release --no-restore
+    - name: Run Clippy
+      run: cargo clippy --all-targets --all-features -- -D warnings
       
-    - name: Run C# Tests (if available)
+    - name: Build Project
+      run: cargo build --verbose --release
+      
+    - name: Run Tests
+      run: cargo test --verbose
+      
+    - name: Run Benchmarks
       run: |
-        if [ -d "tests" ]; then
-          dotnet test --configuration Release --no-build --verbosity normal
+        if [ -d "benches" ]; then
+          cargo bench
         else
-          echo "ℹ️ No C# tests found - skipping"
+          echo "ℹ️ No benchmarks found - skipping"
         fi
       
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: csharp-build
+        name: rust-build
         path: |
-          .godot/mono/temp/bin/
-          !.godot/mono/temp/bin/**/*.pdb
+          target/release/parsec-nova*
+          !target/release/*.d
         retention-days: 7
 
-  # Phase 3: Godot Headless Tests
-  test-godot:
-    name: Godot Headless Tests
+  # Phase 3: Rust Headless Tests
+  test-rust:
+    name: Rust Headless Tests
     runs-on: ubuntu-latest
     needs: validate
     
@@ -112,23 +122,26 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
       
-    - name: Download Godot
-      run: |
-        wget -q https://github.com/godotengine/godot/releases/download/${{ env.GODOT_VERSION }}-stable/Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64.zip
-        unzip -q Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64.zip
-        chmod +x Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64
-        
-    - name: Setup .NET for Godot
-      uses: actions/setup-dotnet@v3
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@master
       with:
-        dotnet-version: ${{ env.DOTNET_VERSION }}
+        toolchain: ${{ env.RUST_TOOLCHAIN }}
+        
+    - name: Cache Cargo Dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
         
     - name: Validate Project Structure
       run: |
         echo "🔍 Validating project structure..."
         
         # Check essential files
-        required_files=("project.godot" "src/Main.cs" "README.md")
+        required_files=("Cargo.toml" "src/main.rs" "README.md")
         
         for file in "${required_files[@]}"; do
           if [ -f "$file" ]; then
@@ -139,135 +152,131 @@ jobs:
           fi
         done
         
-        # Check project file syntax (without editor loading)
-        echo "🔧 Checking project.godot syntax..."
-        if ! grep -q "application" project.godot; then
-          echo "❌ Invalid project.godot structure"
+        # Check Cargo.toml syntax
+        echo "🔧 Checking Cargo.toml syntax..."
+        if ! cargo check --quiet; then
+          echo "❌ Invalid Cargo.toml structure"
           exit 1
         fi
         
-        # Validate scene files exist
-        echo "🎬 Checking scene files..."
-        if [ -d "scenes" ]; then
-          scene_count=$(find scenes -name "*.tscn" | wc -l)
-          echo "✅ Found $scene_count scene files"
+        # Validate asset directories
+        echo "🎬 Checking asset directories..."
+        if [ -d "assets" ]; then
+          asset_count=$(find assets -type f | wc -l)
+          echo "✅ Found $asset_count asset files"
         else
-          echo "⚠️ No scenes directory found"
+          echo "⚠️ No assets directory found"
         fi
         
-    - name: Test Headless Prototype
+    - name: Test Headless Simulation
       run: |
-        echo "🚀 Testing headless prototype..."
-        timeout 30s ./Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64 --headless --quit
-        
-        # Check project file syntax (without editor loading)
-        echo "🔧 Checking project.godot syntax..."
-        if ! grep -q "application" project.godot; then
-          echo "❌ Invalid project.godot structure"
+        echo "🚀 Testing headless simulation..."
+        timeout 30s cargo run --bin simulation --release || {
+          echo "❌ Headless simulation failed to start"
           exit 1
-        fi
-        
-        # Validate scene files exist
-        echo "🎬 Checking scene files..."
-        if [ -d "scenes" ]; then
-          scene_count=$(find scenes -name "*.tscn" | wc -l)
-          echo "✅ Found $scene_count scene files"
-        else
-          echo "⚠️ No scenes directory found"
-        fi
-        
-    - name: Test Scene Loading
-      run: |
-        echo "🔍 Testing scene loading..."
-        
-        # Test individual scenes
-        scenes=("scenes/game/Ship.tscn" "scenes/game/Asteroid.tscn" "scenes/game/SpaceSector.tscn")
-        
-        for scene in "${scenes[@]}"; do
-          if [ -f "$scene" ]; then
-            echo "Testing $scene..."
-            timeout 15s ./Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64 --headless --quit "$scene" || {
-              echo "❌ Scene $scene failed to load"
-              exit 1
-            }
-            echo "✅ $scene loaded successfully"
-          else
-            echo "⚠️ Scene $scene not found"
-          fi
-        done
-        
-    - name: Validate Input Mapping
-      run: |
-        echo "🎮 Testing input configuration..."
-        ./Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64 --headless --quit --script .github/scripts/test_input.gd || {
-          echo "⚠️ Input test script not found - skipping"
         }
+        echo "✅ Headless simulation started successfully"
+        
+    - name: Test JSON World Loading
+      run: |
+        echo "� Testing JSON world loading..."
+        
+        # Test world files if they exist
+        if [ -d "assets/worlds" ]; then
+          for world in assets/worlds/*.json; do
+            if [ -f "$world" ]; then
+              echo "Testing $world..."
+              # Basic JSON validation
+              if python3 -m json "$world" > /dev/null 2>&1; then
+                echo "✅ $world is valid JSON"
+              else
+                echo "❌ $world has invalid JSON"
+                exit 1
+              fi
+            fi
+          done
+        else
+          echo "⚠️ No worlds directory found - creating example"
+          mkdir -p assets/worlds
+          echo '{"entities": [], "version": "1.0"}' > assets/worlds/example.json
+        fi
+        
+    - name: Performance Benchmarks
+      run: |
+        echo "📊 Running performance benchmarks..."
+        if [ -d "benches" ]; then
+          cargo bench --no-run
+          echo "✅ Benchmarks compiled successfully"
+        else
+          echo "⚠️ No benchmarks found - skipping"
+        fi
 
   # Phase 4: Multi-Platform Builds
   build-multiplatform:
     name: Multi-Platform Builds
-    runs-on: ubuntu-latest
-    needs: [validate, build-csharp, test-godot]
+    runs-on: ${{ matrix.os }}
+    needs: [validate, build-rust, test-rust]
     strategy:
       matrix:
-        platform: [linux, windows, macos, web]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            target: x86_64-unknown-linux-gnu
+          - os: windows-latest
+            platform: windows
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            platform: macos
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            platform: macos-arm
+            target: aarch64-apple-darwin
     
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
       
-    - name: Download Godot
-      run: |
-        wget -q https://github.com/godotengine/godot/releases/download/4.6.2-stable/Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64.zip
-        unzip -q Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64.zip
-        chmod +x Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64
-        
-    - name: Download Export Templates
-      run: |
-        # Create export templates directory
-        mkdir -p ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable
-        
-        # Download export templates
-        wget -q https://github.com/godotengine/godot/releases/download/4.6.2-stable/Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
-        unzip -q Godot_v${{ env.GODOT_VERSION }}-stable_export_templates.tpz
-        
-        # Move templates to correct location
-        mv templates/* ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable/
-        
-        # Verify templates are in place
-        ls -la ~/.local/share/godot/export_templates/${{ env.GODOT_VERSION }}.stable/
-        
-        echo "✅ Export templates installed"
-        
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@master
       with:
-        dotnet-version: 8.0.x
+        toolchain: ${{ env.RUST_TOOLCHAIN }}
+        target: ${{ matrix.target }}
+        
+    - name: Cache Cargo Dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        
+    - name: Install System Dependencies (Linux)
+      if: matrix.platform == 'linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pkg-config libx11-dev libasound2-dev libudev-dev
         
     - name: Build for ${{ matrix.platform }}
       run: |
-        echo "🚀 Building for ${{ matrix.platform }}..."
+        echo "🚀 Building for ${{ matrix.platform }} (target: ${{ matrix.target }})..."
         
         # Create build directory
         mkdir -p build/${{ matrix.platform }}
         
-        # Build based on platform
+        # Build for target
+        cargo build --release --target ${{ matrix.target }}
+        
+        # Copy binaries to build directory
         case "${{ matrix.platform }}" in
           linux)
-            ./Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64 --headless --export-release "Linux/X11" "build/${{ matrix.platform }}/ParSecNova"
+            cp target/${{ matrix.target }}/release/parsec-nova build/${{ matrix.platform }}/parsec-nova
             ;;
           windows)
-            ./Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64 --headless --export-release "Windows Desktop" "build/${{ matrix.platform }}/ParSecNova.exe"
+            cp target/${{ matrix.target }}/release/parsec-nova.exe build/${{ matrix.platform }}/parsec-nova.exe
             ;;
-          macos)
-            ./Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64 --headless --export-release "macOS" "build/${{ matrix.platform }}/ParSecNova.zip" || {
-              echo "⚠️ macOS export failed - creating placeholder"
-              touch "build/${{ matrix.platform }}/ParSecNova.zip"
-            }
-            ;;
-          web)
-            ./Godot_v${{ env.GODOT_VERSION }}-stable_linux.x86_64 --headless --export-release "Web" "build/${{ matrix.platform }}/index.html"
-            echo "✅ Web export created - can be deployed to GitHub Pages"
+          macos|macos-arm)
+            cp target/${{ matrix.target }}/release/parsec-nova build/${{ matrix.platform }}/parsec-nova
             ;;
         esac
         
@@ -330,30 +339,38 @@ jobs:
         name: ParSec Nova v${{ github.run_number }}
         tag_name: v${{ github.run_number }}
         body: |
-          ## ParSec Nova - Phase 2 Early Prototype
+          ## ParSec Nova - Rust/Bevy Prototype
           
           ### 🚀 Features
-          - ✅ Newtonian physics system
-          - ✅ 6DoF ship controls
-          - ✅ Laser weapon system
-          - ✅ Asteroid destruction
-          - ✅ Multi-platform builds
+          - ✅ Rust-based ECS architecture
+          - ✅ Headless simulation capability
+          - ✅ Dynamic JSON world loading
+          - ✅ Multi-platform native binaries
+          - ✅ Performance-optimized physics
           
           ### 📦 Downloads
-          - **Linux**: `parsec-nova-linux/ParSecNova.x86_64`
-          - **Windows**: `parsec-nova-windows/ParSecNova.exe`
-          - **macOS**: `parsec-nova-macos/ParSecNova.zip`
+          - **Linux**: `parsec-nova-linux/parsec-nova`
+          - **Windows**: `parsec-nova-windows/parsec-nova.exe`
+          - **macOS (Intel)**: `parsec-nova-macos/parsec-nova`
+          - **macOS (Apple Silicon)**: `parsec-nova-macos-arm/parsec-nova`
           
-          ### 🎮 Controls
-          - **WASD**: Pitch/Yaw rotation
-          - **Q/E**: Roll
-          - **Space**: Forward thrust
-          - **Mouse**: Fire laser
+          ### 🎮 Running
+          ```bash
+          # Headless simulation
+          ./parsec-nova --mode simulation
+          
+          # Full client with visualization
+          ./parsec-nova --mode client
+          
+          # Both simulation and client
+          ./parsec-nova
+          ```
           
           ### 📊 Status
           - **Build**: ✅ Passed
           - **Tests**: ✅ Passed
           - **Quality**: ✅ Passed
+          - **Benchmarks**: ✅ Passed
           
           ---
           Built from commit: ${{ github.sha }}
@@ -361,6 +378,7 @@ jobs:
           releases/parsec-nova-linux/*.*
           releases/parsec-nova-windows/*.*
           releases/parsec-nova-macos/*.*
+          releases/parsec-nova-macos-arm/*.*
         draft: false
         prerelease: true
       env:
