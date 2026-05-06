@@ -16,6 +16,9 @@ permissions:
 env:
   RUST_TOOLCHAIN: stable
   CARGO_TERM_COLOR: always
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  WINIT_BACKEND: x11
+  WINIT_USE_X11: true
 
 jobs:
   # Phase 1: Basic Validation
