@@ -181,11 +181,11 @@
 - **Graphics**: Basic 3D rendering without effects
 
 ### Prototype Success Criteria
-- [x] Ship moves realistically in space
-- [x] Asteroid can be hit
-- [x] Asteroid explodes on hit
-- [x] Controls are intuitive
-- [x] 60 FPS on standard hardware
+- [ ] Ship moves realistically in space
+- [ ] Asteroid can be hit
+- [ ] Asteroid explodes on hit
+- [ ] Controls are intuitive
+- [ ] 60 FPS on standard hardware
 
 ---
 
