@@ -8,7 +8,7 @@ description = "AI-driven space simulation"
 [dependencies]
 # Standard Bevy without default features for full control (optional)
 # Or just use the standard version:
-bevy = { version = "0.14", default-features = false, features = ["bevy_asset", "bevy_winit", "bevy_render", "bevy_core_pipeline", "bevy_sprite", "bevy_text", "bevy_ui", "bevy_pbr", "bevy_gltf", "bevy_scene", "bevy_animation", "bevy_gizmos"] }
+bevy = "0.14"
 
 # Serialization for your JSON system
 serde = { version = "1.0", features = ["derive"] }
@@ -17,9 +17,6 @@ serde_json = "1.0"
 [features]
 # The "dev" feature enables fast linking during development
 dev = ["bevy/dynamic_linking"]
-
-# The "headless" feature disables window and audio features for CI/CD
-headless = ["bevy/bevy_core_pipeline", "bevy/bevy_sprite", "bevy/bevy_text", "bevy/bevy_ui", "bevy/bevy_pbr", "bevy/bevy_gltf", "bevy/bevy_scene", "bevy/bevy_animation", "bevy/bevy_gizmos"]
 
 # --- OPTIMIZATIONS ---
 

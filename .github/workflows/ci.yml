@@ -103,7 +103,10 @@ jobs:
         echo "✅ Clippy completed successfully"
       
     - name: Build Project
-      run: cargo build --verbose --release --features headless
+      env:
+        WINIT_BACKEND: x11
+        WINIT_USE_X11: true
+      run: cargo build --verbose --release
       
     - name: Run Tests
       run: cargo test --verbose
