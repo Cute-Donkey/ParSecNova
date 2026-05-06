@@ -76,6 +76,11 @@ jobs:
         toolchain: ${{ env.RUST_TOOLCHAIN }}
         components: rustfmt, clippy
         
+    - name: Install System Dependencies (Linux)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y pkg-config libx11-dev libasound2-dev libudev-dev libasound2-dev libasound2 libasound2-plugins libasound2-plugins-data
+        
     - name: Cache Cargo Dependencies
       uses: actions/cache@v4
       with:
@@ -283,7 +288,7 @@ jobs:
       if: matrix.platform == 'linux'
       run: |
         sudo apt-get update
-        sudo apt-get install -y pkg-config libx11-dev libasound2-dev libudev-dev
+        sudo apt-get install -y pkg-config libx11-dev libasound2-dev libudev-dev libasound2-dev libasound2
         
     - name: Build for ${{ matrix.platform }}
       run: |
