@@ -20,6 +20,15 @@ dev = ["bevy/dynamic_linking"]
 
 # --- OPTIMIZATIONS ---
 
+# CI/CD profile for automated builds without audio dependencies
+[profile.ci-cd]
+inherits = "release"
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = 'abort'
+strip = true
+
 # Configuration for "cargo run" (fast compilation, slow execution)
 [profile.dev]
 opt-level = 1 

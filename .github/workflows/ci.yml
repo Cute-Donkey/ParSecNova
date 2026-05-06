@@ -106,7 +106,7 @@ jobs:
       env:
         WINIT_BACKEND: x11
         WINIT_USE_X11: true
-      run: cargo build --verbose --release
+      run: cargo build --verbose --profile ci-cd --no-default-features --features bevy_asset,bevy_core_pipeline,bevy_pbr,bevy_render,bevy_sprite,bevy_text,bevy_ui,bevy_window,bevy_winit,x11
       
     - name: Run Tests
       run: cargo test --verbose
@@ -190,13 +190,13 @@ jobs:
         
         # Build first to separate build time from execution
         echo "Building release version..."
-        cargo build --release --verbose
+        cargo build --profile ci-cd --no-default-features --features bevy_asset,bevy_core_pipeline,bevy_pbr,bevy_render,bevy_sprite,bevy_text,bevy_ui,bevy_window,bevy_winit,x11 --verbose
         
         # Test the binary with timeout
         echo "Checking for binary..."
-        if [ -f "target/release/parsec_nova" ]; then
+        if [ -f "target/ci-cd/parsec_nova" ]; then
           echo "✅ Binary found, testing execution..."
-          timeout 10s ./target/release/parsec_nova || {
+          timeout 10s ./target/ci-cd/parsec_nova || {
             echo "ℹ️ Application started successfully (timeout expected)"
           }
           echo "✅ Headless simulation started successfully"
@@ -304,18 +304,18 @@ jobs:
         mkdir -p build/${{ matrix.platform }}
         
         # Build for target
-        cargo build --release --target ${{ matrix.target }}
+        cargo build --profile ci-cd --no-default-features --features bevy_asset,bevy_core_pipeline,bevy_pbr,bevy_render,bevy_sprite,bevy_text,bevy_ui,bevy_window,bevy_winit,x11 --target ${{ matrix.target }}
         
         # Copy binaries to build directory
         case "${{ matrix.platform }}" in
           linux)
-            cp target/${{ matrix.target }}/release/parsec-nova build/${{ matrix.platform }}/parsec-nova
+            cp target/${{ matrix.target }}/ci-cd/parsec-nova build/${{ matrix.platform }}/parsec-nova
             ;;
           windows)
-            cp target/${{ matrix.target }}/release/parsec-nova.exe build/${{ matrix.platform }}/parsec-nova.exe
+            cp target/${{ matrix.target }}/ci-cd/parsec-nova.exe build/${{ matrix.platform }}/parsec-nova.exe
             ;;
           macos|macos-arm)
-            cp target/${{ matrix.target }}/release/parsec-nova build/${{ matrix.platform }}/parsec-nova
+            cp target/${{ matrix.target }}/ci-cd/parsec-nova build/${{ matrix.platform }}/parsec-nova
             ;;
         esac
         
