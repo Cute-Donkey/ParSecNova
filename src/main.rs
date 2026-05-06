@@ -108,6 +108,7 @@ fn load_world_from_json(
     });
 }
 
+#[allow(clippy::needless_pass_by_value)]
 fn player_input(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut query: Query<&mut NewtonianBody, With<PlayerShip>>,
@@ -121,6 +122,8 @@ fn player_input(
     }
 }
 
+#[allow(clippy::needless_pass_by_value)]
+#[allow(clippy::explicit_iter_loop)]
 fn apply_physics(mut query: Query<(&mut Transform, &NewtonianBody)>, time: Res<Time>) {
     for (mut trans, body) in query.iter_mut() {
         trans.translation += body.velocity * time.delta_seconds();

@@ -51,28 +51,30 @@ jobs:
         echo "⚛️ Testing physics performance..."
         
         # Build release version for performance testing
-        cargo build --release
+        echo "Building release version..."
+        cargo build --release --quiet
         
         # Run physics simulation test
         if [ -f "target/release/parsec_nova" ]; then
           echo "Testing physics simulation..."
           
-          # Measure physics performance
+          # Measure physics performance with shorter timeout
           start_time=$(date +%s%N)
-          timeout 30s ./target/release/parsec_nova || true
+          timeout 10s ./target/release/parsec_nova --headless || true
           end_time=$(date +%s%N)
           
           duration=$(((end_time - start_time) / 1000000))
           echo "✅ Physics simulation ran for ${duration}ms"
           
           # Check if performance is reasonable
-          if [ $duration -lt 30000 ]; then
+          if [ $duration -lt 10000 ]; then
             echo "✅ Physics performance is acceptable"
           else
             echo "⚠️ Physics simulation may have performance issues"
           fi
         else
           echo "⚠️ Binary not found - build may have failed"
+          exit 1
         fi
     
     - name: Memory Usage Test
