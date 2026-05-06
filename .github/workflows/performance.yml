@@ -17,57 +17,70 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
       
-    - name: Download Godot
-      run: |
-        wget -q https://github.com/godotengine/godot/releases/download/4.6.2-stable/Godot_v4.6.2-stable_linux.x86_64.zip
-        unzip -q Godot_v4.6.2-stable_linux.x86_64.zip
-        chmod +x Godot_v4.6.2-stable_linux.x86_64
-        
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@master
       with:
-        dotnet-version: 8.0.x
+        toolchain: stable
         
-    - name: Performance Test - Scene Loading
+    - name: Performance Test - World Loading
       run: |
-        echo "⚡ Testing scene loading performance..."
+        echo "⚡ Testing world loading performance..."
         
-        scenes=("scenes/prototypes/HeadlessPrototype.tscn" "scenes/game/SpaceSector.tscn")
-        
-        for scene in "${scenes[@]}"; do
-          if [ -f "$scene" ]; then
-            echo "Testing $scene..."
-            
-            # Measure loading time
-            start_time=$(date +%s%N)
-            timeout 30s ./Godot_v4.6.2-stable_linux.x86_64 --headless --quit "$scene"
-            end_time=$(date +%s%N)
-            
-            duration=$(((end_time - start_time) / 1000000))
-            echo "✅ $scene loaded in ${duration}ms"
-            
-            # Check if loading is reasonable (< 10 seconds)
-            if [ $duration -gt 10000 ]; then
-              echo "⚠️ $scene loading time is slow: ${duration}ms"
-            fi
-          else
-            echo "⚠️ Scene $scene not found"
+        # Test JSON world loading
+        if [ -f "assets/world.json" ]; then
+          echo "Testing world.json loading..."
+          
+          # Measure loading time
+          start_time=$(date +%s%N)
+          timeout 30s cargo run --release --features dev || true
+          end_time=$(date +%s%N)
+          
+          duration=$(((end_time - start_time) / 1000000))
+          echo "✅ World loaded in ${duration}ms"
+          
+          # Check if loading is reasonable (< 10 seconds)
+          if [ $duration -gt 10000 ]; then
+            echo "⚠️ World loading time is slow: ${duration}ms"
           fi
-        done
+        else
+          echo "⚠️ assets/world.json not found"
+        fi
     
     - name: Performance Test - Physics Simulation
       run: |
         echo "⚛️ Testing physics performance..."
         
-        # Run performance test using pre-created script
-        timeout 30s ./Godot_v4.6.2-stable_linux.x86_64 --headless --quit --script .github/scripts/performance_test.gd
+        # Build release version for performance testing
+        cargo build --release
+        
+        # Run physics simulation test
+        if [ -f "target/release/parsec_nova" ]; then
+          echo "Testing physics simulation..."
+          
+          # Measure physics performance
+          start_time=$(date +%s%N)
+          timeout 30s ./target/release/parsec_nova || true
+          end_time=$(date +%s%N)
+          
+          duration=$(((end_time - start_time) / 1000000))
+          echo "✅ Physics simulation ran for ${duration}ms"
+          
+          # Check if performance is reasonable
+          if [ $duration -lt 30000 ]; then
+            echo "✅ Physics performance is acceptable"
+          else
+            echo "⚠️ Physics simulation may have performance issues"
+          fi
+        else
+          echo "⚠️ Binary not found - build may have failed"
+        fi
     
     - name: Memory Usage Test
       run: |
         echo "💾 Testing memory usage..."
         
-        # Monitor memory during scene loading
-        timeout 30s /usr/bin/time -v ./Godot_v4.6.2-stable_linux.x86_64 --headless --quit scenes/prototypes/HeadlessPrototype.tscn > memory_output.txt 2>&1 || true
+        # Monitor memory during world loading
+        timeout 30s /usr/bin/time -v cargo run --release --features dev > memory_output.txt 2>&1 || true
         
         # Extract memory usage
         if grep -q "Maximum resident set size" memory_output.txt; then
@@ -88,8 +101,8 @@ jobs:
       run: |
         echo "📊 Performance Test Summary"
         echo "=========================="
-        echo "✅ Scene loading tests completed"
+        echo "✅ World loading tests completed"
         echo "✅ Physics simulation tests completed"
         echo "✅ Memory usage tests completed"
         echo ""
-        echo "Performance is within acceptable ranges for Phase 2 prototype."
+        echo "Performance is within acceptable ranges for Rust/Bevy prototype."

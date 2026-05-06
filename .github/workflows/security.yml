@@ -17,23 +17,28 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
       
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+    - name: Setup Rust
+      uses: dtolnay/rust-toolchain@master
       with:
-        dotnet-version: 8.0.x
+        toolchain: stable
         
-    - name: Run .NET Security Scan
+    - name: Run Rust Security Scan
       run: |
-        echo "🔒 Running .NET security scan..."
+        echo "🔒 Running Rust security scan..."
         
-        # Check for vulnerable packages
-        dotnet list package --vulnerable --include-transitive
+        # Install cargo-audit if not present
+        if ! command -v cargo-audit &> /dev/null; then
+          cargo install cargo-audit
+        fi
         
-        # Run audit if available
-        if command -v dotnet-audit &> /dev/null; then
-          dotnet audit
+        # Run security audit
+        cargo audit
+        
+        # Check for outdated dependencies
+        if command -v cargo-outdated &> /dev/null; then
+          cargo outdated
         else
-          echo "ℹ️ dotnet-audit not available - using list package instead"
+          echo "ℹ️ cargo-outdated not available - install with: cargo install cargo-outdated"
         fi
     
     - name: Scan for Secrets
@@ -49,8 +54,8 @@ jobs:
         echo "🔒 Checking file permissions..."
         
         # Check for executable files that shouldn't be
-        find . -type f -executable -name "*.cs" -exec echo "⚠️ Executable C# file: {}" \;
-        find . -type f -executable -name "*.gd" -exec echo "⚠️ Executable GDScript file: {}" \;
+        find . -type f -executable -name "*.rs" -exec echo "⚠️ Executable Rust file: {}" \;
+        find . -type f -executable -name "*.toml" -exec echo "⚠️ Executable TOML file: {}" \;
         
         # Check for sensitive file patterns
         sensitive_patterns=("*.pem" "*.key" "*.p12" "id_rsa" "*.pfx")
@@ -66,12 +71,12 @@ jobs:
         
         # Check for essential .gitignore entries
         required_entries=(
-          ".godot/"
-          ".mono/"
-          "*.tmp"
-          "user://"
+          "/target/"
+          "Cargo.lock"
+          "/dist/"
+          "*.profraw"
           "*.log"
-          "*.pdb"
+          "/assets/.bevy/"
         )
         
         for entry in "${required_entries[@]}"; do
@@ -81,10 +86,10 @@ jobs:
         done
         
         # Check for files that should be ignored
-        if [ -d ".godot" ]; then
-          echo "⚠️ .godot directory should be in .gitignore"
+        if [ -d "target" ]; then
+          echo "⚠️ target directory should be in .gitignore"
         fi
         
-        if [ -d ".mono" ]; then
-          echo "⚠️ .mono directory should be in .gitignore"
+        if [ -d "dist" ]; then
+          echo "⚠️ dist directory should be in .gitignore"
         fi

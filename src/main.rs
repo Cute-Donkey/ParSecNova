@@ -5,17 +5,24 @@ use std::fs;
 // --- DATA STRUCTURES (JSON Mapping) ---
 
 #[derive(Deserialize, Debug)]
-enum EntityType { Light, Asteroid, Ship }
+enum EntityType {
+    Light,
+    Asteroid,
+    Ship,
+}
 
 #[derive(Deserialize, Debug)]
 struct SceneEntity {
     #[allow(dead_code)] // <--- This disables the warning only for this field
-    name: String,       // Now it can be called "name" again (without underscore)
+    name: String, // Now it can be called "name" again (without underscore)
     entity_type: EntityType,
     position: [f32; 3],
-    #[serde(default)] mass: f32,
-    #[serde(default)] intensity: f32,
-    #[serde(default)] radius: f32,
+    #[serde(default)]
+    mass: f32,
+    #[serde(default)]
+    intensity: f32,
+    #[serde(default)]
+    radius: f32,
 }
 
 #[derive(Deserialize, Debug)]
@@ -55,11 +62,15 @@ fn load_world_from_json(
 
     for ent in world.entities {
         let pos = Vec3::from_array(ent.position);
-        
+
         match ent.entity_type {
             EntityType::Light => {
                 commands.spawn(PointLightBundle {
-                    point_light: PointLight { intensity: ent.intensity, shadows_enabled: true, ..default() },
+                    point_light: PointLight {
+                        intensity: ent.intensity,
+                        shadows_enabled: true,
+                        ..default()
+                    },
                     transform: Transform::from_translation(pos),
                     ..default()
                 });
@@ -81,7 +92,10 @@ fn load_world_from_json(
                         ..default()
                     },
                     PlayerShip,
-                    NewtonianBody { velocity: Vec3::ZERO, mass: ent.mass },
+                    NewtonianBody {
+                        velocity: Vec3::ZERO,
+                        mass: ent.mass,
+                    },
                 ));
             }
         }
