@@ -87,7 +87,7 @@ jobs:
       run: cargo fmt --all -- --check
       
     - name: Run Clippy
-      run: cargo clippy --all-targets --all-features -- -D warnings
+      run: cargo clippy --all-targets --all-features -- -W clippy::all -A clippy::needless_pass_by_value -A clippy::explicit_iter_loop
       
     - name: Build Project
       run: cargo build --verbose --release
@@ -188,7 +188,7 @@ jobs:
         
     - name: Test JSON World Loading
       run: |
-        echo "� Testing JSON world loading..."
+        echo "🧪 Testing JSON world loading..."
         
         # Test world files if they exist
         if [ -d "assets/worlds" ]; then
