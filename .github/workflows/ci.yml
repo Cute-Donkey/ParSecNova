@@ -321,7 +321,7 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    needs: [validate, build-csharp, test-godot, build-multiplatform, quality-check]
+    needs: [validate, build-rust, test-rust, build-multiplatform, quality-check]
     if: github.ref == 'refs/heads/main' && success()
     
     steps:
