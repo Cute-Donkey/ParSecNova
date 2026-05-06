@@ -1,29 +1,39 @@
-# Godot 4+ specific ignores
-.godot/
-.nomedia
+# Rust/Bevy specific ignores
 
-# Godot-specific ignores
-.import/
-export.cfg
-export_credentials.cfg
+# Cargo build artifacts
+/target/
+Cargo.lock
+
+# Distribution binaries
+/dist/
+
+# Bevy specific
+/assets/.bevy/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS specific
+.DS_Store
+Thumbs.db
+
+# Debug and profiling
+*.profraw
+perf.data*
+
+# Backup files
+*.bak
+*.backup
+
+# Temporary files
 *.tmp
+*.temp
 
-# Build artifacts (generated executables and data)
-build/
-*.pck
-*.x86_64
-*.exe
-
-# Godot UID and metadata files (auto-generated)
-*.uid
-*.import
-
-# Imported translations (automatically generated from CSV files)
-*.translation
-
-# Mono-specific ignores
-.mono/
-data_*/
-mono_crash.*.json
+# Log files
+*.log
 
 # German documentation (moved to .git/info/exclude for Cascade access)

@@ -1,0 +1,23 @@
+{
+  "entities": [
+    {
+      "name": "Sonne",
+      "entity_type": "Light",
+      "position": [10.0, 20.0, 10.0],
+      "intensity": 2000000.0
+    },
+    {
+      "name": "Asteroid_Alpha",
+      "entity_type": "Asteroid",
+      "position": [0.0, 0.0, -50.0],
+      "mass": 50000.0,
+      "radius": 10.0
+    },
+    {
+      "name": "MeinSchiff",
+      "entity_type": "Ship",
+      "position": [0.0, 0.0, 0.0],
+      "mass": 1500.0
+    }
+  ]
+}
