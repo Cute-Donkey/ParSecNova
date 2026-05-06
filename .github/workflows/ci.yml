@@ -46,15 +46,17 @@ jobs:
     
     - name: Validate Project Files
       run: |
-        echo "Checking project structure..."
+        echo "🔍 Checking project structure..."
         
         # Check essential files exist
-        test -f Cargo.toml || { echo "❌ Cargo.toml missing"; exit 1; }
-        test -f README.md || { echo "⚠️ README.md missing"; }
+        echo "Checking for required files..."
+        test -f Cargo.toml && echo "✅ Cargo.toml found" || { echo "❌ Cargo.toml missing"; exit 1; }
+        test -f README.md && echo "✅ README.md found" || { echo "⚠️ README.md missing"; }
         
         # Check directories
-        test -d src || { echo "❌ src directory missing"; exit 1; }
-        test -d assets || { echo "❌ assets directory missing"; exit 1; }
+        echo "Checking for required directories..."
+        test -d src && echo "✅ src directory found" || { echo "❌ src directory missing"; exit 1; }
+        test -d assets && echo "✅ assets directory found" || { echo "❌ assets directory missing"; exit 1; }
         
         echo "✅ Project structure validation passed"
 
@@ -87,7 +89,10 @@ jobs:
       run: cargo fmt --all -- --check
       
     - name: Run Clippy
-      run: cargo clippy --all-targets --all-features -- -W clippy::all -A clippy::needless_pass_by_value -A clippy::explicit_iter_loop
+      run: |
+        echo "🔍 Running clippy with verbose output..."
+        cargo clippy --all-targets --all-features --verbose -- -W clippy::all -A clippy::needless_pass_by_value -A clippy::explicit_iter_loop
+        echo "✅ Clippy completed successfully"
       
     - name: Build Project
       run: cargo build --verbose --release
@@ -173,41 +178,55 @@ jobs:
         echo "🚀 Testing headless simulation..."
         
         # Build first to separate build time from execution
-        cargo build --release --quiet
+        echo "Building release version..."
+        cargo build --release --verbose
         
         # Test the binary with timeout
+        echo "Checking for binary..."
         if [ -f "target/release/parsec_nova" ]; then
+          echo "✅ Binary found, testing execution..."
           timeout 10s ./target/release/parsec_nova || {
             echo "ℹ️ Application started successfully (timeout expected)"
           }
           echo "✅ Headless simulation started successfully"
         else
           echo "❌ Binary not found - build may have failed"
+          echo "Current directory contents:"
+          ls -la target/ || echo "target directory not found"
+          ls -la target/release/ || echo "release directory not found"
           exit 1
         fi
         
     - name: Test JSON World Loading
       run: |
         echo "🧪 Testing JSON world loading..."
+        echo "Current assets directory structure:"
+        find assets -type f || echo "No files found in assets"
         
         # Test world files if they exist
         if [ -d "assets/worlds" ]; then
+          echo "📁 assets/worlds directory found"
           for world in assets/worlds/*.json; do
             if [ -f "$world" ]; then
-              echo "Testing $world..."
+              echo "🔍 Testing $world..."
               # Basic JSON validation
               if python3 -m json.tool "$world" > /dev/null 2>&1; then
                 echo "✅ $world is valid JSON"
               else
                 echo "❌ $world has invalid JSON"
+                echo "Content of $world:"
+                cat "$world"
                 exit 1
               fi
+            else
+              echo "⚠️ No JSON files found in assets/worlds"
             fi
           done
         else
           echo "⚠️ No worlds directory found - creating example"
           mkdir -p assets/worlds
           echo '{"entities": [], "version": "1.0"}' > assets/worlds/example.json
+          echo "✅ Created example world file"
         fi
         
     - name: Performance Benchmarks
