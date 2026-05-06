@@ -16,14 +16,14 @@
 - **Result**: Flexible, modular architecture
 
 #### 2. Component-based Serialization
-```csharp
-// ECS Component
-public class ShipComponent : Component
-{
-    public string ShipType { get; set; }
-    public float Mass { get; set; }
-    public float MaxThrust { get; set; }
-    public Vector3[] ThrusterPositions { get; set; }
+```rust
+// ECS Component (Bevy)
+#[derive(Component, Deserialize, Serialize)]
+pub struct ShipComponent {
+    pub ship_type: String,
+    pub mass: f32,
+    pub max_thrust: f32,
+    pub thruster_positions: Vec<Vec3>,
 }
 
 // JSON Data Structure
@@ -91,107 +91,130 @@ public class ShipComponent : Component
 ```
 
 #### ECS Component System
-```csharp
-// Base Component
-public abstract class Component
-{
-    public abstract void LoadFromJson(JsonObject data);
-    public abstract JsonObject SaveToJson();
+```rust
+// Base Component (Bevy)
+pub trait JsonComponent {
+    fn from_json(value: &serde_json::Value) -> Result<Self, serde_json::Error> where Self: Sized;
+    fn to_json(&self) -> Result<serde_json::Value, serde_json::Error>;
 }
 
 // Transform Component
-public class TransformComponent : Component
-{
-    public Vector3 Position { get; set; }
-    public Quaternion Rotation { get; set; }
-    public Vector3 Scale { get; set; }
-    
-    public override void LoadFromJson(JsonObject data)
-    {
-        Position = new Vector3(
-            data["position"]["x"].AsFloat(),
-            data["position"]["y"].AsFloat(),
-            data["position"]["z"].AsFloat()
-        );
-        // ... more loading logic
-    }
+#[derive(Component, Deserialize, Serialize)]
+pub struct TransformComponent {
+    pub position: Vec3,
+    pub rotation: Quat,
+    pub scale: Vec3,
 }
 
 // Ship Component
-public class ShipComponent : Component
-{
-    public string ShipType { get; set; }
-    public float Mass { get; set; }
-    public float MaxThrust { get; set; }
-    
-    public override void LoadFromJson(JsonObject data)
-    {
-        ShipType = data["ship_type"].AsString();
-        Mass = data["mass"].AsFloat();
-        MaxThrust = data["max_thrust"].AsFloat();
-    }
+#[derive(Component, Deserialize, Serialize)]
+pub struct ShipComponent {
+    pub ship_type: String,
+    pub mass: f32,
+    pub max_thrust: f32,
+}
+
+// Physics Component
+#[derive(Component, Deserialize, Serialize)]
+pub struct PhysicsComponent {
+    pub mass: f32,
+    pub collision_shape: CollisionShape,
+    pub is_static: bool,
 }
 ```
 
 ### World Loading Pipeline
 
 #### 1. JSON Parser
-```csharp
-public class WorldLoader
-{
-    public async Task<Sector> LoadSectorFromJson(string jsonPath)
-    {
-        string jsonContent = await File.ReadAllTextAsync(jsonPath);
-        JsonObject sectorData = Json.ParseString(jsonContent).AsObject();
+```rust
+// World Loader System (Bevy)
+pub struct WorldLoader;
+
+impl WorldLoader {
+    pub fn load_sector_from_json(&self, json_path: &str) -> Result<Sector, Box<dyn std::error::Error>> {
+        let json_content = std::fs::read_to_string(json_path)?;
+        let sector_data: serde_json::Value = serde_json::from_str(&json_content)?;
         
-        Sector sector = new Sector();
-        sector.Name = sectorData["sector_name"].AsString();
+        let mut sector = Sector::new();
+        sector.name = sector_data["sector_name"].as_str().unwrap_or("Unknown").to_string();
         
         // Load all objects
-        foreach (JsonObject objData in sectorData["objects"].AsArray())
-        {
-            Entity entity = CreateEntityFromJson(objData);
-            sector.AddEntity(entity);
+        if let Some(objects) = sector_data["objects"].as_array() {
+            for obj_data in objects {
+                let entity = self.create_entity_from_json(obj_data)?;
+                sector.add_entity(entity);
+            }
         }
         
-        return sector;
+        Ok(sector)
     }
     
-    private Entity CreateEntityFromJson(JsonObject objData)
-    {
-        Entity entity = new Entity();
-        entity.Id = objData["id"].AsString();
+    fn create_entity_from_json(&self, obj_data: &serde_json::Value) -> Result<Entity, Box<dyn std::error::Error>> {
+        let mut commands = Commands::default();
+        let entity = commands.spawn_empty().id();
         
         // Load all components
-        JsonObject components = objData["components"].AsObject();
-        foreach (var componentData in components)
-        {
-            Component component = CreateComponent(componentData.Key, componentData.Value);
-            entity.AddComponent(component);
+        if let Some(components) = obj_data["components"].as_object() {
+            for (component_type, component_data) in components {
+                self.add_component_to_entity(&mut commands, entity, match component_type {
+                    "transform" => "transform",
+                    "ship" => "ship",
+                    "space_station" => "space_station",
+                    "asteroid" => "asteroid",
+                    "physics" => "physics",
+                    "weapon_system" => "weapon_system",
+                    _ => return Err(format!("Unknown component type: {}", component_type).into()),
+                }, component_data)?;
+            }
         }
         
-        return entity;
+        Ok(entity)
     }
 }
 ```
 
 #### 2. Component Factory
-```csharp
-public class ComponentFactory
-{
-    public Component CreateComponent(string type, JsonObject data)
-    {
-        return type switch
-        {
-            "transform" => new TransformComponent { LoadFromJson(data) },
-            "ship" => new ShipComponent { LoadFromJson(data) },
-            "space_station" => new SpaceStationComponent { LoadFromJson(data) },
-            "asteroid" => new AsteroidComponent { LoadFromJson(data) },
-            "physics" => new PhysicsComponent { LoadFromJson(data) },
-            "weapon_system" => new WeaponSystemComponent { LoadFromJson(data) },
-            _ => throw new ArgumentException($"Unknown component type: {type}")
-        };
+```rust
+// Component Factory
+pub struct ComponentFactory;
+
+impl ComponentFactory {
+    pub fn add_component_to_entity(
+        &self, 
+        commands: &mut Commands, 
+        entity: Entity, 
+        component_type: &str, 
+        data: &serde_json::Value
+    ) -> Result<(), Box<dyn std::error::Error>> {
+            "transform" => {
+                let transform: TransformComponent = serde_json::from_value(data.clone())?;
+                commands.entity(entity).insert(transform);
+            },
+            "ship" => {
+                let ship: ShipComponent = serde_json::from_value(data.clone())?;
+                commands.entity(entity).insert(ship);
+            },
+            "space_station" => {
+                let station: SpaceStationComponent = serde_json::from_value(data.clone())?;
+                commands.entity(entity).insert(station);
+            },
+            "asteroid" => {
+                let asteroid: AsteroidComponent = serde_json::from_value(data.clone())?;
+                commands.entity(entity).insert(asteroid);
+            },
+            "physics" => {
+                let physics: PhysicsComponent = serde_json::from_value(data.clone())?;
+                commands.entity(entity).insert(physics);
+            },
+            "weapon_system" => {
+                let weapons: WeaponSystemComponent = serde_json::from_value(data.clone())?;
+                commands.entity(entity).insert(weapons);
+            },
+            _ => return Err(format!("Unknown component type: {}", component_type).into()),
+        }
+        Ok(())
     }
+}
 }
 ```
 
@@ -199,7 +222,7 @@ public class ComponentFactory
 
 #### 1. Modularity
 - **New Objects**: Easily defined in JSON
-- **New Components**: Easily implemented in C#
+- **New Components**: Easily implemented in Rust
 - **No Code Changes** for new world content
 
 #### 2. Reusability

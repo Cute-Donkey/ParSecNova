@@ -2,9 +2,9 @@
 
 ## Project Overview
 
-**Goal**: Modernization of the legendary Linux space combat simulator ParSec (1999/2002) using Godot 4 and C#.
+**Goal**: Modernization of the legendary Linux space combat simulator ParSec (1999/2002) using Rust and Bevy.
 
-**Vision**: Bridge between classic Newtonian flight physics and modern game engine technology with AI-enhanced HD assets.
+**Vision**: Bridge between classic Newtonian flight physics and modern ECS-based engine technology with headless simulation and AI-enhanced HD assets.
 
 ---
 
@@ -17,8 +17,9 @@
 - [x] Document asset structure
 
 ### 1.2 Technical Requirements
-- [x] Define Godot 4.x system requirements
-- [x] Specify C#/.NET 8+ dependencies
+- [x] Define Rust/Bevy system requirements
+- [x] Specify ECS architecture requirements
+- [x] Headless simulation + client architecture
 - [x] Specify target platforms (Linux, Windows, macOS)
 - [x] Define performance benchmarks
 
@@ -30,46 +31,47 @@
 - [x] AI-powered 3D model optimization
 - [x] Style guide for consistent asset quality
 
-### 1.4 Project Structure
-- [x] Create Godot project
-- [x] Configure C# project setup
-- [x] Folder structure for code, assets, scenes
-- [x] Set up build pipeline
+### 1.4 Project Structure & Tech Stack Migration
+- [x] Create Rust project with Cargo
+- [x] Integrate Bevy as ECS engine
+- [x] Folder structure for ECS components, systems, assets
+- [x] Set up DevContainer for development environment
+- [x] Configure CI/CD pipeline for Rust builds
 
 ---
 
 ## Phase 2: Early Prototype (Week 3)
 
 ### 2.1 Minimal Prototype
-- [x] Create Godot project with GDScript
-- [x] Simple space world with one asteroid
-- [x] Basic spaceship with Newtonian physics
-- [x] Thrust and maneuvering systems
-- [x] Simple weapon system (laser)
-- [x] Asteroid can be shot and destroyed
-- [x] Basic collision detection
+- [ ] Create Rust/Bevy ECS system
+- [ ] Simple space world with one asteroid
+- [ ] Basic spaceship with Newtonian physics (ECS)
+- [ ] Thrust and maneuvering systems (Bevy Physics)
+- [ ] Simple weapon system (laser)
+- [ ] Asteroid can be shot and destroyed
+- [ ] Basic collision detection (Bevy Collision)
 
 ### 2.2 Prototype Testing
-- [x] Flight physics test (movement in space)
-- [x] Weapon test (hit detection)
-- [x] Performance measurement
-- [x] Control feedback collection
+- [ ] Flight physics test (movement in space)
+- [ ] Weapon test (hit detection)
+- [ ] Performance measurement
+- [ ] Control feedback collection
 
 ---
 
 ## Phase 3: Core Systems (Week 4-7)
 
 ### 3.1 Physics Engine
-- [x] Custom RigidBody3D implementation
-- [x] Newtonian motion laws
-- [x] Thrust and maneuvering systems
-- [x] Collision detection for space objects
+- [ ] Custom RigidBody3D implementation
+- [ ] Newtonian motion laws
+- [ ] Thrust and maneuvering systems
+- [ ] Collision detection for space objects
 
 ### 3.2 Ship Systems
-- [x] Define ship classes (Fighter, Cruiser, etc.)
-- [x] Implement weapon systems (laser with projectile physics)
-- [x] Shield and armor systems
-- [x] Energy management (laser energy consumption)
+- [ ] Define ship classes (Fighter, Cruiser, etc.)
+- [ ] Implement weapon systems (laser with projectile physics)
+- [ ] Shield and armor systems
+- [ ] Energy management (laser energy consumption)
 
 ### 3.3 Controls
 - [ ] Input system for joystick/keyboard

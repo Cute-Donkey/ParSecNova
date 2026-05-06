@@ -15,39 +15,49 @@
 ### Architecture for AI Content Generation
 
 #### 1. AI Content Generator System
-```csharp
-public class AIContentGenerator
-{
+```rust
+// AI Content Generator (Bevy Resource)
+#[derive(Resource)]
+pub struct AIContentGenerator {
     // AI models for different content types
-    private ShipDesignAI _shipDesigner;
-    private PlanetGeneratorAI _planetGenerator;
-    private StationDesignerAI _stationDesigner;
-    private WorldBuilderAI _worldBuilder;
-    
+    ship_designer: ShipDesignAI,
+    planet_generator: PlanetGeneratorAI,
+    station_designer: StationDesignerAI,
+    world_builder: WorldBuilderAI,
+}
+
+impl AIContentGenerator {
     // Generation methods
-    public async Task<ShipDesign> GenerateShipAsync(ShipDesignRequest request);
-    public async Task<PlanetData> GeneratePlanetAsync(PlanetDesignRequest request);
-    public async Task<StationDesign> GenerateStationAsync(StationDesignRequest request);
-    public async Task<WorldData> GenerateWorldAsync(WorldDesignRequest request);
+    pub async fn generate_ship(&self, request: ShipDesignRequest) -> Result<ShipDesign, AIError>;
+    pub async fn generate_planet(&self, request: PlanetDesignRequest) -> Result<PlanetData, AIError>;
+    pub async fn generate_station(&self, request: StationDesignRequest) -> Result<StationDesign, AIError>;
+    pub async fn generate_world(&self, request: WorldDesignRequest) -> Result<WorldData, AIError>;
 }
 ```
 
 #### 2. Ship Type Generation
-```csharp
-public class ShipDesignAI
-{
+```rust
+// Ship Design AI
+pub struct ShipDesignAI;
+
+impl ShipDesignAI {
     // AI-generated ship components
-    public struct ShipDesign
-    {
-        public string ShipName { get; set; }
-        public string ShipClass { get; set; } // fighter, cruiser, capital, custom
-        public float Mass { get; set; }
-        public float MaxThrust { get; set; }
-        public Vector3[] ThrusterPositions { get; set; }
-        public WeaponSlot[] WeaponSlots { get; set; }
-        public string VisualTheme { get; set; }
-        public string LoreDescription { get; set; }
-        public string ModelPath { get; set; }
+    pub async fn generate_ship_design(&self, request: ShipDesignRequest) -> Result<ShipDesign, AIError> {
+        // AI logic for ship generation
+    }
+}
+
+#[derive(Component, Serialize, Deserialize)]
+pub struct ShipDesign {
+    pub ship_name: String,
+    pub ship_class: ShipClass, // fighter, cruiser, capital, custom
+    pub mass: f32,
+    pub max_thrust: f32,
+    pub thruster_positions: Vec<Vec3>,
+    pub weapon_slots: Vec<WeaponSlot>,
+    pub visual_theme: String,
+    pub lore_description: String,
+    pub model_path: String,
     }
     
     public async Task<ShipDesign> GenerateShipAsync(ShipDesignRequest request)

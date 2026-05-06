@@ -106,44 +106,38 @@ public class AssetQualityAnalyzer
         };
     }
     
-    private AssetAnalysis AnalyzeTexture(string filename, AssetType type)
-    {
-        return new AssetAnalysis
-        {
-            AssetName = filename,
-            Type = type,
-            Resolution = 256, // Typical for 1999
-            QualityScore = 0.4f,
-            Issues = new[]
-            {
-                "Low resolution (256x256)",
-                "No PBR materials",
-                "Basic color mapping only",
-                "No normal/specular maps",
-                "Compression artifacts"
-            },
-            Priority = ModernizationPriority.High
-        };
+    fn analyze_texture(&self, filename: &str, asset_type: AssetType) -> AssetAnalysis {
+        AssetAnalysis {
+            asset_name: filename.to_string(),
+            asset_type,
+            resolution: 256, // Typical for 1999
+            quality_score: 0.4,
+            issues: vec![
+                "Low resolution (256x256)".to_string(),
+                "No PBR materials".to_string(),
+                "Basic color mapping only".to_string(),
+                "No normal/specular maps".to_string(),
+                "Compression artifacts".to_string(),
+            ],
+            priority: ModernizationPriority::High,
+        }
     }
     
-    private AssetAnalysis AnalyzeSound(string filename, AssetType type)
-    {
-        return new AssetAnalysis
-        {
-            AssetName = filename,
-            Type = type,
-            Resolution = 22050, // 22kHz sampling rate
-            QualityScore = 0.5f,
-            Issues = new[]
-            {
-                "Low sampling rate (22kHz)",
-                "No spatial audio",
-                "Mono only",
-                "Basic compression",
-                "No dynamic range"
-            },
-            Priority = ModernizationPriority.Medium
-        };
+    fn analyze_sound(&self, filename: &str, asset_type: AssetType) -> AssetAnalysis {
+        AssetAnalysis {
+            asset_name: filename.to_string(),
+            asset_type,
+            resolution: 22050, // 22kHz sampling rate
+            quality_score: 0.5,
+            issues: vec![
+                "Low sampling rate (22kHz)".to_string(),
+                "No spatial audio".to_string(),
+                "Mono only".to_string(),
+                "Basic compression".to_string(),
+                "No dynamic range".to_string(),
+            ],
+            priority: ModernizationPriority::Medium,
+        }
     }
 }
 ```
@@ -151,19 +145,20 @@ public class AssetQualityAnalyzer
 ### AI Asset Modernization Pipeline
 
 #### 1. AI Models for Asset Modernization
-```csharp
-public class AIAssetModernizer
-{
+```rust
+// AI Asset Modernizer (Bevy Resource)
+#[derive(Resource)]
+pub struct AIAssetModernizer {
     // AI models for different asset types
-    private TextureUpscalerAI _textureUpscaler;
-    private ModelEnhancerAI _modelEnhancer;
-    private AudioEnhancerAI _audioEnhancer;
-    private StyleTransferAI _styleTransfer;
-    
-    public async Task<ModernizedAsset> ModernizeAssetAsync(AssetAnalysis originalAsset)
-    {
-        return originalAsset.Type switch
-        {
+    texture_upscaler: TextureUpscalerAI,
+    model_enhancer: ModelEnhancerAI,
+    audio_enhancer: AudioEnhancerAI,
+    style_transfer: StyleTransferAI,
+}
+
+impl AIAssetModernizer {
+    pub async fn modernize_asset(&self, original_asset: &AssetAnalysis) -> Result<ModernizedAsset, AIError> {
+        match original_asset.asset_type {
             AssetType.Ship3D => await Modernize3DModelAsync(originalAsset),
             AssetType.ShipTexture => await ModernizeTextureAsync(originalAsset),
             AssetType.WeaponSound => await ModernizeSoundAsync(originalAsset),
