@@ -91,7 +91,7 @@ jobs:
           ~/.cargo/registry
           ~/.cargo/git
           target
-        key: ${{ runner.os }}-cargo-v2-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-cargo-v3-${{ hashFiles('**/Cargo.lock') }}
         
     - name: Check Formatting
       run: cargo fmt --all -- --check
@@ -142,7 +142,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y pkg-config libx11-dev libudev-dev libxkbcommon-dev libxrandr-dev libxi-dev xorg-dev libasound2-dev
-      
+        
     - name: Setup Rust
       uses: dtolnay/rust-toolchain@master
       with:
@@ -155,7 +155,7 @@ jobs:
           ~/.cargo/registry
           ~/.cargo/git
           target
-        key: ${{ runner.os }}-cargo-v2-${{ hashFiles('**/Cargo.lock') }}
+        key: ${{ runner.os }}-cargo-v3-${{ hashFiles('**/Cargo.lock') }}
         
     - name: Validate Project Structure
       run: |
@@ -195,21 +195,21 @@ jobs:
         
         # Build first to separate build time from execution
         echo "Building release version..."
-        cargo build --profile ci-cd --no-default-features --features bevy_asset,bevy_core_pipeline,bevy_pbr,bevy_render,bevy_sprite,bevy_text,bevy_ui,bevy_window,bevy_winit,x11 --verbose
+        cargo build --release --no-default-features --features bevy_asset,bevy_core_pipeline,bevy_pbr,bevy_render,bevy_sprite,bevy_text,bevy_ui,bevy_window,bevy_winit,x11 --verbose
         
         # Test the binary with timeout
         echo "Checking for binary..."
-        if [ -f "target/ci-cd/parsec_nova" ]; then
+        BINARY="target/release/parsec_nova"
+        
+        if [ -f "$BINARY" ]; then
           echo "✅ Binary found, testing execution..."
-          timeout 10s ./target/ci-cd/parsec_nova || {
+          timeout 10s ./$BINARY || {
             echo "ℹ️ Application started successfully (timeout expected)"
           }
           echo "✅ Headless simulation started successfully"
         else
-          echo "❌ Binary not found - build may have failed"
-          echo "Current directory contents:"
-          ls -la target/ || echo "target directory not found"
-          ls -la target/ci-cd/ || echo "ci-cd directory not found"
+          echo "❌ Binary not found at $BINARY"
+          find target -name "parsec_nova" # Suchhilfe falls Pfad anders
           exit 1
         fi
         
