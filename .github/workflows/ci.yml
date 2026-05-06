@@ -103,7 +103,7 @@ jobs:
         echo "✅ Clippy completed successfully"
       
     - name: Build Project
-      run: cargo build --verbose --release
+      run: cargo build --verbose --release --features headless
       
     - name: Run Tests
       run: cargo test --verbose

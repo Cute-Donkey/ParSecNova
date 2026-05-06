@@ -18,6 +18,9 @@ serde_json = "1.0"
 # The "dev" feature enables fast linking during development
 dev = ["bevy/dynamic_linking"]
 
+# The "headless" feature disables window and audio features for CI/CD
+headless = ["bevy_asset", "bevy_core_pipeline", "bevy_sprite", "bevy_text", "bevy_ui", "bevy_pbr", "bevy_gltf", "bevy_scene", "bevy_animation", "bevy_gizmos"]
+
 # --- OPTIMIZATIONS ---
 
 # Configuration for "cargo run" (fast compilation, slow execution)
